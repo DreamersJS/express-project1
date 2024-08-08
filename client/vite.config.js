@@ -7,14 +7,15 @@ export default defineConfig({
     proxy: {
       // Proxy API requests to the backend server
       '/api': {
-        target: 'http://localhost:3000', // Replace with your backend server URL
+        target: 'http://localhost:3500',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
-      // Proxy WebSocket connections to the backend server
-      '/ws': {
-        target: 'ws://localhost:8080', // Replace with your WebSocket server URL
-        ws: true,
+      // Proxy Socket.IO connections
+      '/socket.io': {
+        target: 'http://localhost:3500', // Your backend server URL
+        ws: true, // Enable WebSocket proxying
+        changeOrigin: true,
       },
     },
   },

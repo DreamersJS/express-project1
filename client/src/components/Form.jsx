@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
+import io from 'socket.io-client';
 
 export const Form = () => {
   const [message, setMessage] = useState('');
@@ -7,50 +8,37 @@ export const Form = () => {
   const socketRef = useRef(null);
   const inputRef = useRef(null);
 
+ 
   useEffect(() => {
-    socketRef.current = new WebSocket('ws://localhost:8080');
-    console.log('WS Client connected');
+    socketRef.current = io('http://localhost:3500'); 
+    console.log('Socket.IO Client connected');
   
-    socketRef.current.onopen = () => {
-      console.log('Connection opened');
-    };
-  
-    socketRef.current.onmessage = (event) => {
-      console.log('Received message:', event.data);
-      setMessages(prevMessages => [...prevMessages, event.data]);
-    };
-  
-    socketRef.current.onclose = () => {
-      console.log('WS Client disconnected');
-    };
-  
-    socketRef.current.onerror = (error) => {
-      console.error('WebSocket Error:', error);
-    };
+    socketRef.current.on('message', (data) => {
+      console.log('Received message:', data);
+      setMessages(prevMessages => [...prevMessages, data]);
+    });
   
     return () => {
       if (socketRef.current) {
-        socketRef.current.close();
-        console.log('WS Client disconnected');
+        socketRef.current.disconnect();
+        console.log('Socket.IO Client disconnected');
       }
     };
   }, []);
   
-
   const handleSubmit = (event) => {
-    console.log('handleSubmit');
     event.preventDefault();
     if (message) {
-      socketRef.current.send(message); 
-      console.log(`Send message: ${message}!`);
-      setMessage(''); 
+      console.log(`Sending message: ${message}`);
+      socketRef.current.emit('message', message);
+      setMessage('');
     }
-    inputRef.current.focus(); 
+    inputRef.current.focus();
   };
 
   return (
     <div>
-      <h1>WebSocket Form</h1>
+      <h1>Socket.IO Form</h1>
       <form onSubmit={handleSubmit}>
         <label>
           Message:
@@ -74,4 +62,3 @@ export const Form = () => {
     </div>
   );
 };
-
