@@ -9,24 +9,40 @@ export const Form = () => {
 
   useEffect(() => {
     socketRef.current = new WebSocket('ws://localhost:8080');
-
-    // Handle incoming messages
+    console.log('WS Client connected');
+  
+    socketRef.current.onopen = () => {
+      console.log('Connection opened');
+    };
+  
     socketRef.current.onmessage = (event) => {
-        console.log('Received message:', event.data);
+      console.log('Received message:', event.data);
       setMessages(prevMessages => [...prevMessages, event.data]);
     };
-
+  
+    socketRef.current.onclose = () => {
+      console.log('WS Client disconnected');
+    };
+  
+    socketRef.current.onerror = (error) => {
+      console.error('WebSocket Error:', error);
+    };
+  
     return () => {
       if (socketRef.current) {
         socketRef.current.close();
+        console.log('WS Client disconnected');
       }
     };
   }, []);
+  
 
   const handleSubmit = (event) => {
+    console.log('handleSubmit');
     event.preventDefault();
     if (message) {
       socketRef.current.send(message); 
+      console.log(`Send message: ${message}!`);
       setMessage(''); 
     }
     inputRef.current.focus(); 
