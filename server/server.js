@@ -1,15 +1,24 @@
-import { createServer } from 'http';
+import express from 'express';
 import { Server } from 'socket.io';
-// import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-// const app = express();
-const httpServer = createServer();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const io = new Server(httpServer, {
+const PORT = process.env.PORT || 3500;
+const app = express();
+app.use(express.static(path.join(__dirname, '../client')));
+const expressServer = app.listen(PORT, () => {
+  console.log(`Listening on port ${PORT}`);
+})
+
+const io = new Server(expressServer, {
   cors: {
-    origin: 'http://localhost:5173', // Allow requests from Vite's development server
-    methods: ['GET', 'POST'], // Define the HTTP methods allowed
-    credentials: true, // Allow credentials if needed
+    origin: 'http://localhost:5173', 
+    // origin: process.env.NODE_ENV === 'production' ? false : ['http://localhost:5173','http://127.0.0.1:5173'],
+    methods: ['GET', 'POST'], 
+    credentials: true, 
   },
 });
 
@@ -26,6 +35,3 @@ io.on('connection', (socket) => {
   });
 });
 
-httpServer.listen(3500, () => {
-  console.log('Listening on port 3500');
-});
