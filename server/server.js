@@ -41,26 +41,29 @@ try {
   io.on("connection", (socket) => {
     console.log(`User connected: ${socket.id}`);
 
+    // emit a message to only the client that just connected
+    socket.emit("message", "Welcome to the chat!");
+    // broadcast a message to all clients except the one that just connected
+    socket.broadcast.emit("message", `${socket.id.substring(0, 5)} joined the chat`);
+
     socket.on("message", (data) => {
-      console.log(data);
       io.emit("message", `${socket.id.substring(0, 5)}: ${data}`);
     });
 
     socket.on('typing', () => {
-      console.log('Typing event received from:', socket.id);
       socket.broadcast.emit('typing', socket.id.substring(0, 5));
     });
     
     socket.on('stopTyping', () => {
-      console.log('StopTyping event received from:', socket.id);
       socket.broadcast.emit('stopTyping', socket.id.substring(0, 5));
     });
     
-
     socket.on("disconnect", () => {
+      socket.broadcast.emit("message", `${socket.id.substring(0, 5)} left the chat`);
       console.log("User disconnected");
     });
   });
+
 } catch (error) {
   console.error("Error starting the server:", error);
   process.exit(1);

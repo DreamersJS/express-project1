@@ -24,11 +24,9 @@ export const Form = () => {
     });
 
     socketRef.current.on('typing', (user) => {
-      console.log('Typing event received:', user);
       setTypingUsers(prev => {
         if (!prev.includes(user)) {
           const updated = [...prev, user];
-          console.log('Typing users updated:', updated);
           return updated;
         }
         return prev;
@@ -36,7 +34,6 @@ export const Form = () => {
     });
     
     socketRef.current.on('stopTyping', (user) => {
-      console.log('StopTyping event received:', user);
       setTypingUsers(prev => {
         return prev.filter(u => u !== user);
       });
@@ -54,7 +51,6 @@ export const Form = () => {
   const handleSubmit = (event) => {
     event.preventDefault();
     if (message) {
-      console.log(`Sending message: ${message}`);
       socketRef.current.emit('message', message);
       setMessage('');
     }
@@ -63,19 +59,15 @@ export const Form = () => {
 
   const handleInputChange = (e) => {
     setMessage(e.target.value);
-    console.log('Input change:', e.target.value);
     if (e.target.value) {
       socketRef.current.emit('typing');
-      console.log('Emitting typing event');
     } else {
       socketRef.current.emit('stopTyping');
-      console.log('Emitting stopTyping event');
     }
   };
   
   const handleBlur = () => {
     socketRef.current.emit('stopTyping');
-    console.log('Emitting stopTyping event on blur');
   };
   
   return (
