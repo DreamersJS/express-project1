@@ -38,53 +38,44 @@ try {
     },
   });
 
-  const namespaces = ['/chat', '/admin', '/notifications'];
+  io.on("connection", (socket) => {
+    console.log(`User connected: ${socket.id}`);
 
-  namespaces.forEach((namespace) => {
-    const nsp = io.of(namespace);
+    // emit a message to only the client that just connected
+    socket.emit("message", "Welcome to the chat!");
+    // broadcast a message to all clients except the one that just connected
+    socket.broadcast.emit("message", `${socket.id.substring(0, 5)} joined the chat`);
+    
+    socket.on('testEvent', (data) => {
+      console.log('Received testEvent:', data);
+      socket.emit('testResponse', 'Test response from server');
+    });
+    
+    
+    socket.on('joinRoom', (room) => {
+      console.log(`Received joinRoom event. User: ${socket.id}, Room: ${room}`);
+      socket.join(room);
+      io.to(room).emit('message', `User ${socket.id} joined ${room}`);
+      console.log(`User ${socket.id} joined room: ${room}`);
+    });
+  
+    socket.on('message', (data) => {
+      const { room, message } = data;
+      console.log(`Received message for room ${room}: ${message}`);
+      io.to(room).emit('message', `${socket.id.substring(0, 5)}: ${message}`);
+    });
 
-    nsp.on('connection', (socket) => {
-      console.log(`User connected to ${namespace} namespace: ${socket.id}`);
-
-      if (namespace === '/chat') {
-        
-        socket.on('joinRoom', (room) => {
-          socket.join(room);
-          socket.to(room).emit('message', `${socket.id.substring(0, 5)} joined ${room} room in chat namespace`);
-        });
-
-        socket.emit("message", "Welcome to the chat!");
-        socket.broadcast.emit("message", `${socket.id.substring(0, 5)} joined the chat`);
-
-        socket.on('message', (data) => {
-          const { room, message } = data;
-          nsp.to(room).emit('message', `${socket.id.substring(0, 5)}: ${message}`);
-        });
-
-        socket.on('typing', () => {
-          socket.broadcast.emit('typing', socket.id.substring(0, 5));
-        });
-
-        socket.on('stopTyping', () => {
-          socket.broadcast.emit('stopTyping', socket.id.substring(0, 5));
-        });
-
-      } else if (namespace === '/admin') {
-        socket.on('adminMessage', (data) => {
-          console.log(`Admin Message: ${data}`);
-          nsp.emit('adminMessage', `${socket.id.substring(0, 5)}: ${data}`);
-        });
-
-      } else if (namespace === '/notifications') {
-        socket.on('notify', (data) => {
-          console.log(`Notification: ${data}`);
-          nsp.emit('notify', data);
-        });
-      }
-
-      socket.on('disconnect', () => {
-        console.log(`User disconnected from ${namespace} namespace`);
-      });
+    socket.on('typing', () => {
+      socket.broadcast.emit('typing', socket.id.substring(0, 5));
+    });
+    
+    socket.on('stopTyping', () => {
+      socket.broadcast.emit('stopTyping', socket.id.substring(0, 5));
+    });
+    
+    socket.on("disconnect", () => {
+      socket.broadcast.emit("message", `${socket.id.substring(0, 5)} left the chat`);
+      console.log("User disconnected");
     });
   });
 
@@ -93,6 +84,7 @@ try {
   process.exit(1);
 }
 
+// Handle uncaught exceptions
 process.on("uncaughtException", (err) => {
   console.error("Uncaught Exception:", err.stack || err.message);
   shutdownGracefully();

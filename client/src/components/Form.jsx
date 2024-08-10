@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from 'react';
 import io from 'socket.io-client';
 
 export const Form = () => {
+  const [room, setRoom] = useState('');
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
   const [typingUsers, setTypingUsers] = useState([]);
@@ -14,6 +15,7 @@ export const Form = () => {
     const socketUrl = import.meta.env.VITE_SOCKET_URL;
 
     socketRef.current = io(socketUrl);
+    socketRef.current.emit('testEvent', 'Hello, server!');
     console.log('Socket.IO Client connected');
 
     socketRef.current.on('message', (data) => {
@@ -30,13 +32,13 @@ export const Form = () => {
         return prev;
       });
     });
-    
+
     socketRef.current.on('stopTyping', (user) => {
       setTypingUsers(prev => {
         return prev.filter(u => u !== user);
       });
     });
-    
+
 
     return () => {
       if (socketRef.current) {
@@ -45,6 +47,23 @@ export const Form = () => {
       }
     };
   }, []);
+
+  const handleJoinRoom = (e) => {
+    e.preventDefault();
+    if (room) {
+      console.log(`Joining room: ${room}`);
+      socketRef.current.emit('joinRoom', room); 
+    }
+  };
+
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    if (message && room) {
+      socketRef.current.emit('message', { room, message }); 
+      setMessage(''); 
+    }
+    inputRef.current.focus();
+  };
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -63,29 +82,39 @@ export const Form = () => {
       socketRef.current.emit('stopTyping');
     }
   };
-  
+
   const handleBlur = () => {
     socketRef.current.emit('stopTyping');
   };
-  
+
   return (
     <div>
-      <h2>Socket.IO Form</h2>
-      <form onSubmit={handleSubmit}>
-        <label>
-          Message:
-          <input
-            type="text"
-            value={message}
-            onChange={handleInputChange}
-            onBlur={handleBlur}
-            ref={inputRef}
-          />
-        </label>
-        <button type="submit">Send</button>
+      <h1>Chat Application</h1>
+
+      <form onSubmit={handleJoinRoom}>
+        <input
+          type="text"
+          value={room}
+          onChange={(e) => setRoom(e.target.value)}
+          placeholder="Enter room name"
+        />
+        <button type="submit">Join Room</button>
       </form>
+
+      <form onSubmit={handleSendMessage}>
+        <input
+          type="text"
+          value={message}
+          onChange={handleInputChange}
+          onBlur={handleBlur}
+          placeholder="Enter message"
+          ref={inputRef}
+        />
+        <button type="submit">Send Message</button>
+      </form>
+
       <div>
-        <h2>Received Messages</h2>
+        <h2>Messages in {room}</h2>
         <ul>
           {messages.map((msg, index) => (
             <li key={index}>{msg}</li>
@@ -94,7 +123,6 @@ export const Form = () => {
         <p className="activity">
           {typingUsers.length > 0 ? `${typingUsers.join(', ')} ${typingUsers.length > 1 ? 'are' : 'is'} typing...` : ''}
         </p>
-
       </div>
     </div>
   );
