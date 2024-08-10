@@ -4,7 +4,6 @@ import io from 'socket.io-client';
 export const Form = () => {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
-  const [isTyping, setIsTyping] = useState(false);
   const [typingUsers, setTypingUsers] = useState([]);
 
   const socketRef = useRef(null);
@@ -12,7 +11,6 @@ export const Form = () => {
 
 
   useEffect(() => {
-    // const socketUrl = process.env.REACT_APP_SOCKET_URL;
     const socketUrl = import.meta.env.VITE_SOCKET_URL;
 
     socketRef.current = io(socketUrl);
@@ -72,7 +70,7 @@ export const Form = () => {
   
   return (
     <div>
-      <h1>Socket.IO Form</h1>
+      <h2>Socket.IO Form</h2>
       <form onSubmit={handleSubmit}>
         <label>
           Message:
