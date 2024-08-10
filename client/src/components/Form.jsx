@@ -12,11 +12,30 @@ export const Form = () => {
 
 
   useEffect(() => {
-    const socketUrl = import.meta.env.VITE_SOCKET_URL;
 
-    socketRef.current = io(socketUrl);
-    socketRef.current.emit('testEvent', 'Hello, server!');
+    const socketUrl = String(import.meta.env.VITE_SOCKET_URL);
+
+    console.log('Socket URL:', socketUrl);
+
+    if (!socketUrl) {
+      console.error('Socket URL is undefined');
+      return;
+    }
+  
+    socketRef.current = io(`${socketUrl}/chat`, {
+      transports: ['websocket'], // Ensure WebSocket transport
+    });
+
+    // socketRef.current = io(`${socketUrl}/chat`);
+   
+
+
+
+    // socketRef.current = io(socketUrl);
     console.log('Socket.IO Client connected');
+    // console.log('Connected to /chat namespace');
+    console.log(`Connected to: ${socketRef.current} namespace`);
+    console.log(`Connected to namespace /chat with ID: ${socketRef.current.id}`);
 
     socketRef.current.on('message', (data) => {
       console.log('Received message:', data);

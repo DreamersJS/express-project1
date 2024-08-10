@@ -38,46 +38,39 @@ try {
     },
   });
 
-  io.on("connection", (socket) => {
-    console.log(`User connected: ${socket.id}`);
+  const chatNsp = io.of('/chat');
 
-    // emit a message to only the client that just connected
-    socket.emit("message", "Welcome to the chat!");
-    // broadcast a message to all clients except the one that just connected
-    socket.broadcast.emit("message", `${socket.id.substring(0, 5)} joined the chat`);
-    
-    socket.on('testEvent', (data) => {
-      console.log('Received testEvent:', data);
-      socket.emit('testResponse', 'Test response from server');
-    });
-    
-    
-    socket.on('joinRoom', (room) => {
-      console.log(`Received joinRoom event. User: ${socket.id}, Room: ${room}`);
-      socket.join(room);
-      io.to(room).emit('message', `User ${socket.id} joined ${room}`);
-      console.log(`User ${socket.id} joined room: ${room}`);
-    });
-  
-    socket.on('message', (data) => {
-      const { room, message } = data;
-      console.log(`Received message for room ${room}: ${message}`);
-      io.to(room).emit('message', `${socket.id.substring(0, 5)}: ${message}`);
-    });
+  chatNsp.on('connection', (socket) => {
+  console.log('User connected to /chat:', socket.id);
 
-    socket.on('typing', () => {
-      socket.broadcast.emit('typing', socket.id.substring(0, 5));
-    });
-    
-    socket.on('stopTyping', () => {
-      socket.broadcast.emit('stopTyping', socket.id.substring(0, 5));
-    });
-    
-    socket.on("disconnect", () => {
-      socket.broadcast.emit("message", `${socket.id.substring(0, 5)} left the chat`);
-      console.log("User disconnected");
-    });
+  socket.emit('message', 'Welcome to /chat namespace');
+
+  socket.on('joinRoom', (room) => {
+    console.log(`User ${socket.id} joined room ${room}`);
+    socket.join(room);
+    chatNsp.to(room).emit('message', `User ${socket.id} joined ${room}`);
   });
+
+  socket.on('message', (data) => {
+    const { room, message } = data;
+    console.log(`Message for room ${room}: ${message}`);
+    chatNsp.to(room).emit('message', `${socket.id.substring(0, 5)}: ${message}`);
+  });
+
+  socket.on('typing', () => {
+    socket.broadcast.emit('typing', socket.id.substring(0, 5));
+  });
+
+  socket.on('stopTyping', () => {
+    socket.broadcast.emit('stopTyping', socket.id.substring(0, 5));
+  });
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected from /chat:', socket.id);
+  });
+});
+
+  
 
 } catch (error) {
   console.error("Error starting the server:", error);
