@@ -3,6 +3,7 @@ import io from 'socket.io-client';
 
 export const Form = () => {
   const [room, setRoom] = useState('');
+  const [activeRoom, setActiveRoom] = useState(''); 
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
   const [typingUsers, setTypingUsers] = useState([]);
@@ -64,11 +65,18 @@ export const Form = () => {
 
   const handleJoinRoom = (e) => {
     e.preventDefault();
-    if (room) {
-      console.log(`Joining room: ${room}`);
-      socketRef.current.emit('joinRoom', room); 
+
+    if (!room.trim()) {
+      console.log('Please enter a valid room name.');
+      return;
     }
+
+    console.log(`Joining room: ${room}`);
+    socketRef.current.emit('joinRoom', room);
+    setActiveRoom(room);
+    setRoom('');
   };
+
 
   const validateMessage = (message) => {
     return message && message.trim() !== '';
@@ -127,7 +135,7 @@ export const Form = () => {
       </form>
 
       <div>
-        <h2>Messages in {room}</h2>
+      {activeRoom && <h2>Messages in {activeRoom}</h2>} 
         <ul>
           {messages.map((msg, index) => (
             <li key={index}>{msg}</li>

@@ -42,14 +42,11 @@ try {
   const chatNsp = io.of('/chat');
 
   chatNsp.on('connection', (socket) => {
-  console.log('User connected to /chat:', socket.id);
 
-  socket.emit('message', 'Welcome to /chat namespace');
+  socket.emit('message', 'Welcome to chat app!');
 
   socket.on('joinRoom', (room) => {
     socket.join(room);
-    const rooms = Array.from(socket.rooms);
-    console.log('Rooms the user is in:', rooms);
     chatNsp.to(room).emit('message', `User ${socket.id} joined ${room}`);
   });
 
