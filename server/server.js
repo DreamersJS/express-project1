@@ -3,6 +3,7 @@ import { Server } from "socket.io";
 import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
+
 dotenv.config(); // Load environment variables
 
 const __filename = fileURLToPath(import.meta.url);
@@ -46,19 +47,37 @@ try {
   socket.emit('message', 'Welcome to /chat namespace');
 
   socket.on('joinRoom', (room) => {
-    console.log(`User ${socket.id} joined room ${room}`);
     socket.join(room);
+    const rooms = Array.from(socket.rooms);
+    console.log('Rooms the user is in:', rooms);
     chatNsp.to(room).emit('message', `User ${socket.id} joined ${room}`);
   });
 
   socket.on('message', (data) => {
     const { room, message } = data;
-    console.log(`Message for room ${room}: ${message}`);
-    chatNsp.to(room).emit('message', `${socket.id.substring(0, 5)}: ${message}`);
+  
+    if (!message || typeof message !== 'string' || !message.trim()) {
+      console.log('Invalid message:', message);
+      return;
+    }
+  
+    if (room) {
+      chatNsp.to(room).emit('message', `${socket.id.substring(0, 5)}: ${message}`);
+    } else {
+      chatNsp.emit('message', `${socket.id.substring(0, 5)}: ${message}`);
+    }
   });
+  
+  
+  
 
   socket.on('typing', () => {
-    socket.broadcast.emit('typing', socket.id.substring(0, 5));
+    // socket.broadcast.emit('typing', socket.id.substring(0, 5));
+    if (room) {
+      chatNsp.to(room).broadcast.emit('typing', socket.id.substring(0, 5));
+    } else {
+      chatNsp.broadcast.emit('typing', socket.id.substring(0, 5));
+    }
   });
 
   socket.on('stopTyping', () => {

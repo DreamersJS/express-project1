@@ -10,12 +10,9 @@ export const Form = () => {
   const socketRef = useRef(null);
   const inputRef = useRef(null);
 
-
   useEffect(() => {
 
     const socketUrl = String(import.meta.env.VITE_SOCKET_URL);
-
-    console.log('Socket URL:', socketUrl);
 
     if (!socketUrl) {
       console.error('Socket URL is undefined');
@@ -23,19 +20,16 @@ export const Form = () => {
     }
   
     socketRef.current = io(`${socketUrl}/chat`, {
-      transports: ['websocket'], // Ensure WebSocket transport
+      transports: ['websocket'], 
     });
 
-    // socketRef.current = io(`${socketUrl}/chat`);
-   
+    socketRef.current.on('connect_error', (err) => {
+      console.error('Socket.IO connection error:', err);
+    });
 
-
-
-    // socketRef.current = io(socketUrl);
-    console.log('Socket.IO Client connected');
-    // console.log('Connected to /chat namespace');
-    console.log(`Connected to: ${socketRef.current} namespace`);
-    console.log(`Connected to namespace /chat with ID: ${socketRef.current.id}`);
+    socketRef.current.on('connect', () => {
+      console.log(`Connected to namespace /chat with ID: ${socketRef.current.id}`);
+    });
 
     socketRef.current.on('message', (data) => {
       console.log('Received message:', data);
@@ -58,7 +52,6 @@ export const Form = () => {
       });
     });
 
-
     return () => {
       if (socketRef.current) {
         socketRef.current.disconnect();
@@ -66,6 +59,8 @@ export const Form = () => {
       }
     };
   }, []);
+
+
 
   const handleJoinRoom = (e) => {
     e.preventDefault();
@@ -75,24 +70,23 @@ export const Form = () => {
     }
   };
 
+  const validateMessage = (message) => {
+    return message && message.trim() !== '';
+  };
+  
   const handleSendMessage = (e) => {
     e.preventDefault();
-    if (message && room) {
-      socketRef.current.emit('message', { room, message }); 
-      setMessage(''); 
-    }
-    inputRef.current.focus();
-  };
-
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    if (message) {
-      socketRef.current.emit('message', message);
+    if (validateMessage(message)) {
+      const payload = {
+        room: room || null,
+        message,
+      };
+      socketRef.current.emit('message', payload);
       setMessage('');
     }
     inputRef.current.focus();
   };
-
+  
   const handleInputChange = (e) => {
     setMessage(e.target.value);
     if (e.target.value) {
