@@ -4,6 +4,7 @@ import io from 'socket.io-client';
 export const Form = () => {
   const [room, setRoom] = useState('');
   const [activeRoom, setActiveRoom] = useState(''); 
+  const [joinedRooms, setJoinedRooms] = useState([]);
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
   const [typingUsers, setTypingUsers] = useState([]);
@@ -75,6 +76,13 @@ export const Form = () => {
     socketRef.current.emit('joinRoom', room);
     setActiveRoom(room);
     setRoom('');
+    if (room) {
+      setJoinedRooms((prevRooms) => {
+        const updatedRooms = [...prevRooms, room];
+        console.log('Joined rooms:', updatedRooms); 
+        return updatedRooms;
+      });
+    }
   };
 
 
