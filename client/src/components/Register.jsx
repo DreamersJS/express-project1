@@ -1,15 +1,20 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; 
 
 export const Register = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(''); 
+
+  const navigate = useNavigate(); 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
+    setSuccess(''); 
 
     console.log("Submitting registration form with:", { username, password });
 
@@ -21,8 +26,8 @@ export const Register = () => {
         },
         body: JSON.stringify({ username, password })
       });
-      
-      console.log({response});
+
+      console.log({ response });
       console.log("Response status:", response.status);
 
       if (!response.ok) {
@@ -34,7 +39,12 @@ export const Register = () => {
       const data = await response.json();
       console.log("Registration response data:", data);
 
-      // Handle successful registration (e.g., redirect user or show success message)
+      setSuccess('Registration successful! Please log in.');
+
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000); 
+
     } catch (err) {
       console.error("Registration error:", err);
       setError('Failed to register');
@@ -65,6 +75,7 @@ export const Register = () => {
           Register
         </button>
         {error && <p>{error}</p>}
+        {success && <p>{success}</p>} 
       </form>
     </div>
   );
