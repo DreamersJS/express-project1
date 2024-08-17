@@ -2,6 +2,7 @@ import express from "express";
 import { Server } from "socket.io";
 import path from "path";
 import { fileURLToPath } from "url";
+import userRoutes from './userRoutes.js';
 import dotenv from "dotenv";
 
 dotenv.config(); // Load environment variables
@@ -22,7 +23,20 @@ const CORS_ORIGIN =
     : parseOrigins(process.env.CORS_ORIGIN_DEV);
 
 const app = express();
+
+// Middleware to parse JSON requests
+app.use(express.json());
+
+// API Routes
+app.use('/api/users', userRoutes);
+
+// Serve static files
 app.use(express.static(path.join(__dirname, "../client")));
+
+// Fallback route for SPA
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, "../client", "index.html"));
+});
 
 let expressServer;
 
@@ -33,7 +47,7 @@ try {
 
   const io = new Server(expressServer, {
     cors: {
-      origin: CORS_ORIGIN,
+      origin: 'http://localhost:5173',
       methods: ["GET", "POST"],
       credentials: true,
     },
@@ -42,64 +56,55 @@ try {
   const chatNsp = io.of('/chat');
 
   chatNsp.on('connection', (socket) => {
+    socket.emit('message', 'Welcome to chat app!');
 
-  socket.emit('message', 'Welcome to chat app!');
+    socket.on('joinRoom', (room) => {
+      socket.join(room);
+      chatNsp.to(room).emit('message', `User ${socket.id} joined ${room}`);
+    });
 
-  socket.on('joinRoom', (room) => {
-    socket.join(room);
-    chatNsp.to(room).emit('message', `User ${socket.id} joined ${room}`);
+    socket.on('message', (data) => {
+      const { room, message } = data;
+    
+      if (!message || typeof message !== 'string' || !message.trim()) {
+        console.log('Invalid message:', message);
+        return;
+      }
+    
+      if (room) {
+        chatNsp.to(room).emit('message', `${socket.id.substring(0, 5)}: ${message}`);
+      } else {
+        chatNsp.emit('message', `${socket.id.substring(0, 5)}: ${message}`);
+      }
+    });
+
+    socket.on('typing', () => {
+      if (room) {
+        chatNsp.to(room).broadcast.emit('typing', socket.id.substring(0, 5));
+      } else {
+        chatNsp.broadcast.emit('typing', socket.id.substring(0, 5));
+      }
+    });
+
+    socket.on('stopTyping', () => {
+      socket.broadcast.emit('stopTyping', socket.id.substring(0, 5));
+    });
+
+    socket.on('disconnect', () => {
+      console.log('User disconnected from /chat:', socket.id);
+    });
   });
-
-  socket.on('message', (data) => {
-    const { room, message } = data;
-  
-    if (!message || typeof message !== 'string' || !message.trim()) {
-      console.log('Invalid message:', message);
-      return;
-    }
-  
-    if (room) {
-      chatNsp.to(room).emit('message', `${socket.id.substring(0, 5)}: ${message}`);
-    } else {
-      chatNsp.emit('message', `${socket.id.substring(0, 5)}: ${message}`);
-    }
-  });
-  
-  
-  
-
-  socket.on('typing', () => {
-    // socket.broadcast.emit('typing', socket.id.substring(0, 5));
-    if (room) {
-      chatNsp.to(room).broadcast.emit('typing', socket.id.substring(0, 5));
-    } else {
-      chatNsp.broadcast.emit('typing', socket.id.substring(0, 5));
-    }
-  });
-
-  socket.on('stopTyping', () => {
-    socket.broadcast.emit('stopTyping', socket.id.substring(0, 5));
-  });
-
-  socket.on('disconnect', () => {
-    console.log('User disconnected from /chat:', socket.id);
-  });
-});
-
-  
 
 } catch (error) {
   console.error("Error starting the server:", error);
   process.exit(1);
 }
 
-// Handle uncaught exceptions
+// Handle uncaught exceptions and unhandled rejections
 process.on("uncaughtException", (err) => {
   console.error("Uncaught Exception:", err.stack || err.message);
   shutdownGracefully();
 });
-
-// Handle unhandled promise rejections
 process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection at:", promise, "reason:", reason);
   shutdownGracefully();
@@ -112,15 +117,12 @@ const shutdownGracefully = () => {
       console.log("Closed remaining connections.");
       process.exit(0);
     });
-
-    // If server doesn't shut down gracefully in 10 seconds, force exit.
     setTimeout(() => {
       console.error("Forcing server shutdown.");
       process.exit(1);
-    }, 10000).unref(); // unref to allow the process to exit if no more async work is pending.
+    }, 10000).unref();
   }
 };
 
-// Handle SIGTERM and SIGINT signals for graceful shutdown
 process.on("SIGTERM", shutdownGracefully);
 process.on("SIGINT", shutdownGracefully);
