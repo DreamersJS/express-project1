@@ -1,4 +1,5 @@
 :root {
+
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -23,6 +24,7 @@ a:hover {
 }
 
 body {
+  position: relative;
   margin: 0;
   display: flex;
   place-items: center;
@@ -30,10 +32,7 @@ body {
   min-height: 100vh;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
+
 
 button {
   border-radius: 8px;
@@ -47,7 +46,7 @@ button {
   transition: border-color 0.25s;
 }
 button:hover {
-  border-color: #646cff;
+  border-color: #25252a;
 }
 button:focus,
 button:focus-visible {

@@ -1,77 +1,162 @@
 import { useRef, useState, useEffect } from 'react';
+import { AppContext } from '../AppContext.jsx';
+import io from 'socket.io-client';
+import './Form.css';
 
-export const Form = () => {
+export const Form = ({ showFeedback }) => {
+  const [room, setRoom] = useState('');
+  const [activeRoom, setActiveRoom] = useState(''); 
+  const [joinedRooms, setJoinedRooms] = useState([]);
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
+  const [typingUsers, setTypingUsers] = useState([]);
+  // const { user, setUser } = useContext(AppContext);
 
   const socketRef = useRef(null);
   const inputRef = useRef(null);
 
   useEffect(() => {
-    socketRef.current = new WebSocket('ws://localhost:8080');
-    console.log('WS Client connected');
+
+    const socketUrl = String(import.meta.env.VITE_SOCKET_URL);
+
+    if (!socketUrl) {
+      console.error('Socket URL is undefined');
+      return;
+    }
   
-    socketRef.current.onopen = () => {
-      console.log('Connection opened');
-    };
-  
-    socketRef.current.onmessage = (event) => {
-      console.log('Received message:', event.data);
-      setMessages(prevMessages => [...prevMessages, event.data]);
-    };
-  
-    socketRef.current.onclose = () => {
-      console.log('WS Client disconnected');
-    };
-  
-    socketRef.current.onerror = (error) => {
-      console.error('WebSocket Error:', error);
-    };
-  
+    socketRef.current = io(`${socketUrl}/chat`, {
+      transports: ['websocket'], 
+    });
+
+    socketRef.current.on('connect_error', (err) => {
+      console.error('Socket.IO connection error:', err);
+    });
+
+    socketRef.current.on('connect', () => {
+      console.log(`Connected to namespace /chat with ID: ${socketRef.current.id}`);
+    });
+
+    socketRef.current.on('message', (data) => {
+      console.log('Received message:', data);
+      setMessages(prevMessages => [...prevMessages, data]);
+    });
+
+    socketRef.current.on('typing', (user) => {
+      setTypingUsers(prev => {
+        if (!prev.includes(user)) {
+          const updated = [...prev, user];
+          return updated;
+        }
+        return prev;
+      });
+    });
+
+    socketRef.current.on('stopTyping', (user) => {
+      setTypingUsers(prev => {
+        return prev.filter(u => u !== user);
+      });
+    });
+
     return () => {
       if (socketRef.current) {
-        socketRef.current.close();
-        console.log('WS Client disconnected');
+        socketRef.current.disconnect();
+        console.log('Socket.IO Client disconnected');
       }
     };
   }, []);
-  
 
-  const handleSubmit = (event) => {
-    console.log('handleSubmit');
-    event.preventDefault();
-    if (message) {
-      socketRef.current.send(message); 
-      console.log(`Send message: ${message}!`);
-      setMessage(''); 
+
+
+  const handleJoinRoom = (e) => {
+    e.preventDefault();
+
+    if (!room.trim()) {
+      console.log('Please enter a valid room name.');
+      return;
     }
-    inputRef.current.focus(); 
+
+    console.log(`Joining room: ${room}`);
+    showFeedback(`Joined room: ${room}`, 'info');
+    socketRef.current.emit('joinRoom', room);
+    setActiveRoom(room);
+    setRoom('');
+    if (room) {
+      setJoinedRooms((prevRooms) => {
+        const updatedRooms = [...prevRooms, room];
+        console.log('Joined rooms:', updatedRooms); 
+        return updatedRooms;
+      });
+    }
+  };
+
+
+  const validateMessage = (message) => {
+    return message && message.trim() !== '';
+  };
+  
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    if (validateMessage(message)) {
+      const payload = {
+        room: room || null,
+        message,
+      };
+      socketRef.current.emit('message', payload);
+      setMessage('');
+    }
+    inputRef.current.focus();
+  };
+  
+  const handleInputChange = (e) => {
+    setMessage(e.target.value);
+    if (e.target.value) {
+      socketRef.current.emit('typing');
+    } else {
+      socketRef.current.emit('stopTyping');
+    }
+  };
+
+  const handleBlur = () => {
+    socketRef.current.emit('stopTyping');
   };
 
   return (
     <div>
-      <h1>WebSocket Form</h1>
-      <form onSubmit={handleSubmit}>
-        <label>
-          Message:
-          <input
-            type="text"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            ref={inputRef}
-          />
-        </label>
-        <button type="submit">Send</button>
+      <h1>Chat Application</h1>
+
+      <form onSubmit={handleJoinRoom}>
+        <input
+          type="text"
+          value={room}
+          onChange={(e) => setRoom(e.target.value)}
+          placeholder="Enter room name"
+        />
+        <button type="submit">Join Room</button>
       </form>
+
+      <form onSubmit={handleSendMessage}>
+        <input
+          type="text"
+          value={message}
+          onChange={handleInputChange}
+          onBlur={handleBlur}
+          placeholder="Enter message"
+          ref={inputRef}
+        />
+        <button type="submit">Send Message</button>
+      </form>
+
       <div>
-        <h2>Received Messages</h2>
+      {activeRoom && <h2>Messages in {activeRoom}</h2>} 
         <ul>
           {messages.map((msg, index) => (
             <li key={index}>{msg}</li>
           ))}
         </ul>
+        <p className="activity">
+          {typingUsers.length > 0 ? `${typingUsers.join(', ')} ${typingUsers.length > 1 ? 'are' : 'is'} typing...` : ''}
+        </p>
       </div>
     </div>
   );
 };
-
