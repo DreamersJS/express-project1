@@ -1,5 +1,5 @@
-import { useRef, useState, useEffect } from 'react';
-import { AppContext } from '../AppContext.jsx';
+import { useRef, useState, useEffect, useContext } from 'react';
+import { AppContext } from '../AppContext';
 import io from 'socket.io-client';
 import './Form.css';
 
@@ -10,22 +10,23 @@ export const Form = ({ showFeedback }) => {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
   const [typingUsers, setTypingUsers] = useState([]);
-  // const { user, setUser } = useContext(AppContext);
+
+  const { user } = useContext(AppContext); // Access user context
 
   const socketRef = useRef(null);
   const inputRef = useRef(null);
 
   useEffect(() => {
-
     const socketUrl = String(import.meta.env.VITE_SOCKET_URL);
 
     if (!socketUrl) {
       console.error('Socket URL is undefined');
       return;
     }
-  
+    
     socketRef.current = io(`${socketUrl}/chat`, {
       transports: ['websocket'], 
+      query: { username: user?.username || 'Anonymous' } // Send username to server
     });
 
     socketRef.current.on('connect_error', (err) => {
@@ -52,9 +53,7 @@ export const Form = ({ showFeedback }) => {
     });
 
     socketRef.current.on('stopTyping', (user) => {
-      setTypingUsers(prev => {
-        return prev.filter(u => u !== user);
-      });
+      setTypingUsers(prev => prev.filter(u => u !== user));
     });
 
     return () => {
@@ -63,9 +62,7 @@ export const Form = ({ showFeedback }) => {
         console.log('Socket.IO Client disconnected');
       }
     };
-  }, []);
-
-
+  }, [user]); // Depend on user to re-establish connection with new username
 
   const handleJoinRoom = (e) => {
     e.preventDefault();
@@ -80,15 +77,8 @@ export const Form = ({ showFeedback }) => {
     socketRef.current.emit('joinRoom', room);
     setActiveRoom(room);
     setRoom('');
-    if (room) {
-      setJoinedRooms((prevRooms) => {
-        const updatedRooms = [...prevRooms, room];
-        console.log('Joined rooms:', updatedRooms); 
-        return updatedRooms;
-      });
-    }
+    setJoinedRooms(prevRooms => [...prevRooms, room]);
   };
-
 
   const validateMessage = (message) => {
     return message && message.trim() !== '';
@@ -100,6 +90,7 @@ export const Form = ({ showFeedback }) => {
       const payload = {
         room: room || null,
         message,
+        username: user?.username || 'Anonymous',
       };
       socketRef.current.emit('message', payload);
       setMessage('');
@@ -147,10 +138,10 @@ export const Form = ({ showFeedback }) => {
       </form>
 
       <div>
-      {activeRoom && <h2>Messages in {activeRoom}</h2>} 
+        {activeRoom && <h2>Messages in {activeRoom}</h2>} 
         <ul>
           {messages.map((msg, index) => (
-            <li key={index}>{msg}</li>
+            <li key={index}>{msg.username ? `${msg.username}: ${msg.message}` : msg.message}</li>
           ))}
         </ul>
         <p className="activity">

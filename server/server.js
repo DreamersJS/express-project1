@@ -38,7 +38,6 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../client', 'index.html'));
 });
 
-
 let expressServer;
 
 try {
@@ -57,40 +56,44 @@ try {
   const chatNsp = io.of('/chat');
 
   chatNsp.on('connection', (socket) => {
+    const username = socket.handshake.query.username; // Retrieve username
+
     console.log('New client connected:', socket.id);
 
-    socket.emit('message', 'Welcome to chat app!');
+    socket.emit('message', { username: 'System', message: 'Welcome to chat app!' });
 
     socket.on('joinRoom', (room) => {
       socket.join(room);
-      chatNsp.to(room).emit('message', `User ${socket.id} joined ${room}`);
+      chatNsp.to(room).emit('message', { username: 'System', message: `User ${username || socket.id} joined ${room}` });
     });
 
     socket.on('message', (data) => {
-      const { room, message } = data;
+      const { room, message, username } = data;
 
       if (!message || typeof message !== 'string' || !message.trim()) {
         console.log('Invalid message:', message);
         return;
       }
 
+      const messageWithUsername = { username: username || 'Anonymous', message };
+
       if (room) {
-        chatNsp.to(room).emit('message', `${socket.id.substring(0, 5)}: ${message}`);
+        chatNsp.to(room).emit('message', messageWithUsername);
       } else {
-        chatNsp.emit('message', `${socket.id.substring(0, 5)}: ${message}`);
+        chatNsp.emit('message', messageWithUsername);
       }
     });
 
     socket.on('typing', (room) => {
       if (room) {
-        chatNsp.to(room).broadcast.emit('typing', socket.id.substring(0, 5));
+        chatNsp.to(room).broadcast.emit('typing', username || socket.id);
       } else {
-        chatNsp.broadcast.emit('typing', socket.id.substring(0, 5));
+        chatNsp.broadcast.emit('typing', username || socket.id);
       }
     });
 
     socket.on('stopTyping', () => {
-      socket.broadcast.emit('stopTyping', socket.id.substring(0, 5));
+      socket.broadcast.emit('stopTyping', username || socket.id);
     });
 
     socket.on('disconnect', () => {
