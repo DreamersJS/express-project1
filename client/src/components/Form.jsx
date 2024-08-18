@@ -1,14 +1,16 @@
 import { useRef, useState, useEffect } from 'react';
+import { AppContext } from '../AppContext.jsx';
 import io from 'socket.io-client';
 import './Form.css';
 
-export const Form = () => {
+export const Form = ({ showFeedback }) => {
   const [room, setRoom] = useState('');
   const [activeRoom, setActiveRoom] = useState(''); 
   const [joinedRooms, setJoinedRooms] = useState([]);
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
   const [typingUsers, setTypingUsers] = useState([]);
+  // const { user, setUser } = useContext(AppContext);
 
   const socketRef = useRef(null);
   const inputRef = useRef(null);
@@ -74,6 +76,7 @@ export const Form = () => {
     }
 
     console.log(`Joining room: ${room}`);
+    showFeedback(`Joined room: ${room}`, 'info');
     socketRef.current.emit('joinRoom', room);
     setActiveRoom(room);
     setRoom('');

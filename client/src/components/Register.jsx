@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; 
 
-export const Register = () => {
+export const Register = ({ showFeedback }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState(''); 
@@ -50,7 +50,8 @@ export const Register = () => {
       console.log("Registration response data:", data);
   
       setSuccess('Registration successful! Please log in.');
-  
+      showFeedback('Registration successful!', 'success');
+
       setTimeout(() => {
         navigate('/login');
       }, 2000);
@@ -58,6 +59,8 @@ export const Register = () => {
     } catch (err) {
       console.error("Registration error:", err);
       setError(err.message || 'Failed to register');
+      showFeedback('Registration failed!', 'error');
+
     } finally {
       setLoading(false);
     }

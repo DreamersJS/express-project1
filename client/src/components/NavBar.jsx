@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { AppContext } from "../AppContext";
 import "./NavBar.css";
 
-export const NavBar = ({ selected }) => {
+export const NavBar = ({ selected, showFeedback }) => {
     const { user, setUser } = useContext(AppContext);
     const navigate = useNavigate();
     const [feedback, setFeedback] = useState('');
@@ -17,13 +17,16 @@ export const NavBar = ({ selected }) => {
             localStorage.removeItem('token'); // Adjust if you use sessionStorage or different keys
 
             // Set feedback message
-            setFeedback('Successfully logged out.');
+            // setFeedback('Successfully logged out.');
+            showFeedback('Logout successful!', 'success');
 
             // Redirect to login page after logout
             setTimeout(() => navigate("/login"), 2000); // Redirect after 2 seconds to show feedback
         } catch (error) {
             console.error("Error logging out:", error);
-            setFeedback('Error logging out. Please try again.');
+            // setFeedback('Error logging out. Please try again.');
+            showFeedback('Error logging out. Please try again.', 'error');
+
         }
     };
 
@@ -64,11 +67,11 @@ export const NavBar = ({ selected }) => {
                     </>
                 )}
             </ul>
-            {feedback && (
+            {/* {feedback && (
                 <div className="feedback-message">
                     {feedback}
                 </div>
-            )}
+            )} */}
         </nav>
         </header>
     );

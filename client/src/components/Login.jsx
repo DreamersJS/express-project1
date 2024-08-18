@@ -2,7 +2,7 @@ import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../AppContext';
 
-export const Login = () => {
+export const Login = ({ showFeedback }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -48,11 +48,11 @@ export const Login = () => {
       setUser({ username: data.username, email, token: data.token });
       console.log('Setting user:', { username: data.username, email, token: data.token });
       localStorage.setItem('authToken', data.token);
-
+      showFeedback('Login successful!', 'success');
       navigate('/chat');
     } catch (err) {
       console.error('Login error:', err);
-      setError('Failed to login. Please check your credentials and try again.');
+      showFeedback('Failed to login. Please check your credentials and try again.', 'error');
     } finally {
       setLoading(false);
     }

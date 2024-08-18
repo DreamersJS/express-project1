@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useState } from 'react';
 import './App.css';
 import { Form } from './components/Form.jsx';
 import { Register } from './components/Register.jsx';
@@ -6,20 +7,29 @@ import { Login } from './components/Login.jsx';
 import { NavBar } from './components/NavBar.jsx';
 // import { Auth } from './components/Auth.jsx';
 import { Authenticated } from './components/Authenticated.jsx';
+import Feedback from './components/Feedback.jsx';
 
 function App() {
+  const [feedback, setFeedback] = useState({ message: '', type: '' });
+
+  const showFeedback = (message, type) => {
+    setFeedback({ message, type });
+    setTimeout(() => setFeedback({ message: '', type: '' }), 3000);
+  };
+
   return (
     <BrowserRouter>
-      <NavBar />
+      <NavBar showFeedback={showFeedback} />
+      <Feedback message={feedback.message} type={feedback.type} />
       <Routes>
-        <Route path="/register" element={<Register />} />
-        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register showFeedback={showFeedback} />} />
+        <Route path="/login" element={<Login showFeedback={showFeedback}/>} />
         {/* Protected routes */}
         <Route
           path="/"
           element={
             <Authenticated>
-              <Form />
+              <Form showFeedback={showFeedback}/>
             </Authenticated>
           }
         />
@@ -27,7 +37,7 @@ function App() {
           path="/chat"
           element={
             <Authenticated>
-              <Form />
+              <Form showFeedback={showFeedback}/>
             </Authenticated>
           }
         />
