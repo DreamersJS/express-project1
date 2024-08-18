@@ -46,6 +46,7 @@ router.post('/login', async (req, res) => {
   try {
     const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
     const user = rows[0];
+
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
@@ -56,13 +57,21 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
+    // Generate a token but NEVER return the password in the response
     const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    res.status(200).json({ message: 'Login successful', token });
+
+    res.status(200).json({
+      message: 'Login successful',
+      token,
+      username: user.username,  // Include username
+      email: user.email,         // Include email
+    });
   } catch (error) {
     console.error('Error logging in:', error);
     res.status(500).json({ message: 'Error logging in', error });
   }
 });
+
 
 // Add a GET route to retrieve all users
 router.get('/', async (req, res) => {

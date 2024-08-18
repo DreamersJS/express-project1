@@ -44,7 +44,7 @@ export const Register = () => {
       if (!token) {
         throw new Error('No token received from the server');
       }
-  
+      // setUser({ username: data.username, email, token: data.token });
       localStorage.setItem('authToken', token);
   
       console.log("Registration response data:", data);

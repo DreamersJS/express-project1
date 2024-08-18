@@ -53,7 +53,7 @@ export const NavBar = ({ selected }) => {
                     <>
                         <li>
                             <span>
-                                Welcome, {user.username}!
+                                Welcome, {user?.username || 'User'}!
                             </span>
                         </li>
                         <li>

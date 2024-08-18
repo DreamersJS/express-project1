@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../AppContext';
 
@@ -8,8 +8,15 @@ export const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { setUser } = useContext(AppContext);
-  const navigate = useNavigate(); // Hook for navigation
+  const { user, setUser } = useContext(AppContext);
+  const navigate = useNavigate();
+
+  // Log user state whenever it changes
+  useEffect(() => {
+    if (user) {
+      console.log('User updated:', user);
+    }
+  }, [user]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,9 +27,9 @@ export const Login = () => {
       const response = await fetch('/api/users/login', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password }),
       });
 
       if (!response.ok) {
@@ -32,12 +39,17 @@ export const Login = () => {
 
       const data = await response.json();
 
+      console.log('Login response data:', data)
+
+      if (!data.username) {
+        throw new Error("Username is missing in the response");
+      }
       // Update context with user info
       setUser({ username: data.username, email, token: data.token });
+      console.log('Setting user:', { username: data.username, email, token: data.token });
       localStorage.setItem('authToken', data.token);
 
-      navigate('/chat'); 
-
+      navigate('/chat');
     } catch (err) {
       console.error('Login error:', err);
       setError('Failed to login. Please check your credentials and try again.');
