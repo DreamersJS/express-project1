@@ -115,7 +115,8 @@ export const Form = ({ showFeedback }) => {
     <div>
       <h1>Chat Application</h1>
 
-      <form onSubmit={handleJoinRoom}>
+      <form onSubmit={handleJoinRoom} className='form-container'>
+      <div className="form-group">
         <input
           type="text"
           value={room}
@@ -123,9 +124,11 @@ export const Form = ({ showFeedback }) => {
           placeholder="Enter room name"
         />
         <button type="submit">Join Room</button>
+        </div>
       </form>
 
-      <form onSubmit={handleSendMessage}>
+      <form onSubmit={handleSendMessage} className='form-container'>
+      <div className="form-group">
         <input
           type="text"
           value={message}
@@ -135,6 +138,7 @@ export const Form = ({ showFeedback }) => {
           ref={inputRef}
         />
         <button type="submit">Send Message</button>
+        </div>
       </form>
 
       <div>
