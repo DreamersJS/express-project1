@@ -1,13 +1,3 @@
-
-.feedback-message {
-    margin: 10px;
-    padding: 10px;
-    background-color: #ddd;
-    color: #333;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
 .sticky-header {
     position: fixed;
     top: 0;

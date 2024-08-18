@@ -1,17 +1,16 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../AppContext';
+import { loginUser } from '../../service/service.js';
 
 export const Login = ({ showFeedback }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { user, setUser } = useContext(AppContext);
+  const { user, login } = useContext(AppContext);
   const navigate = useNavigate();
 
-  // Log user state whenever it changes
   useEffect(() => {
     if (user) {
       console.log('User updated:', user);
@@ -20,34 +19,18 @@ export const Login = ({ showFeedback }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
 
     try {
-      const response = await fetch('/api/users/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      const data = await loginUser({ email, password });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText);
+      if (!data.username || !data.token) {
+        throw new Error("Username or token is missing in the response");
       }
 
-      const data = await response.json();
-
-      console.log('Login response data:', data)
-
-      if (!data.username) {
-        throw new Error("Username is missing in the response");
-      }
       // Update context with user info
-      setUser({ username: data.username, email, token: data.token });
-      console.log('Setting user:', { username: data.username, email, token: data.token });
-      localStorage.setItem('authToken', data.token);
+      login({ username: data.username, email: data.email }, data.token);
+
       showFeedback('Login successful!', 'success');
       navigate('/chat');
     } catch (err) {
@@ -79,7 +62,6 @@ export const Login = ({ showFeedback }) => {
         <button type="submit" disabled={loading}>
           Login
         </button>
-        {error && <p>{error}</p>}
       </form>
     </div>
   );
