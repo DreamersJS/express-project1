@@ -1,7 +1,7 @@
 import { useContext, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { AppContext } from "../AppContext";
-// import "./NavBar.css";
+import "./NavBar.css";
 
 export const NavBar = ({ selected }) => {
     const { user, setUser } = useContext(AppContext);
@@ -28,7 +28,8 @@ export const NavBar = ({ selected }) => {
     };
 
     return (
-        <nav>
+        <header className="sticky-header">
+        <nav className="nav-main">
             <ul>
                 <li>
                     <NavLink to="/chat" className={selected === "chat" ? "active" : ""} aria-label="Go to chat page">
@@ -49,14 +50,18 @@ export const NavBar = ({ selected }) => {
                         </li>
                     </>
                 ) : (
-                    <div>
-                        <p>Welcome, {user.username}!</p>
+                    <>
+                        <li>
+                            <span>
+                                Welcome, {user.username}!
+                            </span>
+                        </li>
                         <li>
                             <button onClick={logout} aria-label="Logout">
                                 Logout
                             </button>
                         </li>
-                    </div>
+                    </>
                 )}
             </ul>
             {feedback && (
@@ -65,5 +70,6 @@ export const NavBar = ({ selected }) => {
                 </div>
             )}
         </nav>
+        </header>
     );
 };

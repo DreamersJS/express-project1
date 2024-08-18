@@ -1,50 +1,46 @@
 import React, { useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../AppContext';
 
 export const Login = () => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const { setUser } = useContext(AppContext);
+  const navigate = useNavigate(); // Hook for navigation
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    console.log("Submitting login form with:", { username, password });
-
     try {
-      const response = await fetch(`/api/users/login`, {
+      const response = await fetch('/api/users/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ email, password })
       });
-
-      console.log("Response status:", response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Error response:', errorText);
-        throw new Error('Failed to login');
+        throw new Error(errorText);
       }
 
       const data = await response.json();
-      console.log("Login response data:", data);
 
-      // Store token or user information in context
-      setUser({ username, token: data.token });
+      // Update context with user info
+      setUser({ username: data.username, email, token: data.token });
       localStorage.setItem('authToken', data.token);
 
+      navigate('/chat'); 
 
-      // Optionally redirect user or handle successful login
     } catch (err) {
-      console.error("Login error:", err);
-      setError('Failed to login');
+      console.error('Login error:', err);
+      setError('Failed to login. Please check your credentials and try again.');
     } finally {
       setLoading(false);
     }
@@ -55,10 +51,10 @@ export const Login = () => {
       <h1>Login</h1>
       <form onSubmit={handleSubmit}>
         <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           required
         />
         <input

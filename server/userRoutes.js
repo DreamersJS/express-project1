@@ -19,7 +19,7 @@ router.post('/register', async (req, res) => {
   }
 
   try {
-    const [rows] = await db.query('SELECT * FROM users WHERE username = ?', [username]);
+    const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
     if (rows.length > 0) {
       return res.status(400).json({ message: 'User already exists' });
     }
@@ -27,7 +27,7 @@ router.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     await db.query('INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)', [username, email, hashedPassword]);
 
-    const token = jwt.sign({ username }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1h' });
     res.status(201).json({ message: 'User registered successfully', token });
   } catch (error) {
     console.error('Error registering user:', error);
@@ -37,14 +37,14 @@ router.post('/register', async (req, res) => {
 
 // Login route
 router.post('/login', async (req, res) => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;
 
-  if (!username || !password) {
-    return res.status(400).json({ message: 'Username and password are required' });
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Email and password are required' });
   }
 
   try {
-    const [rows] = await db.query('SELECT * FROM users WHERE username = ?', [username]);
+    const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
     const user = rows[0];
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
@@ -56,7 +56,7 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ username: user.username }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
     res.status(200).json({ message: 'Login successful', token });
   } catch (error) {
     console.error('Error logging in:', error);

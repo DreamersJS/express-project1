@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import io from 'socket.io-client';
+import './Form.css';
 
 export const Form = () => {
   const [room, setRoom] = useState('');
