@@ -1,0 +1,12 @@
+[0;1;32m●[0m mysql.service - MySQL Community Server
+   Loaded: loaded (/lib/systemd/system/mysql.service; enabled; vendor preset: enabled)
+   Active: [0;1;32mactive (running)[0m since Sun 2024-08-18 08:29:36 EEST; 13s ago
+  Process: 25506 ExecStart=/usr/sbin/mysqld --daemonize --pid-file=/run/mysqld/mysqld.pid (code=exited, status=0/SUCCESS)
+  Process: 25497 ExecStartPre=/usr/share/mysql/mysql-systemd-start pre (code=exited, status=0/SUCCESS)
+ Main PID: 25508 (mysqld)
+    Tasks: 27 (limit: 4915)
+   CGroup: /system.slice/mysql.service
+           └─25508 /usr/sbin/mysqld --daemonize --pid-file=/run/mysqld/mysqld.pid
+
+авг 18 08:29:35 dragon systemd[1]: Starting MySQL Community Server...
+авг 18 08:29:36 dragon systemd[1]: Started MySQL Community Server.

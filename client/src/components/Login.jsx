@@ -38,6 +38,8 @@ export const Login = () => {
 
       // Store token or user information in context
       setUser({ username, token: data.token });
+      localStorage.setItem('authToken', data.token);
+
 
       // Optionally redirect user or handle successful login
     } catch (err) {

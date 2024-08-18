@@ -3,8 +3,9 @@ import './App.css';
 import { Form } from './components/Form.jsx';
 import { Register } from './components/Register.jsx';
 import { Login } from './components/Login.jsx';
-import { Authenticated } from './components/Authenticated.jsx';
 import { NavBar } from './components/NavBar.jsx';
+// import { Auth } from './components/Auth.jsx';
+import { Authenticated } from './components/Authenticated.jsx';
 
 function App() {
   return (
@@ -23,14 +24,13 @@ function App() {
           }
         />
         <Route
-          path="/form"
+          path="/chat"
           element={
             <Authenticated>
               <Form />
             </Authenticated>
           }
         />
-
         <Route path="*" element={<div>404 - Page Not Found</div>} />
       </Routes>
     </BrowserRouter>

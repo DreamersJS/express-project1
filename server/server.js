@@ -1,9 +1,9 @@
-import express from "express";
-import { Server } from "socket.io";
-import path from "path";
-import { fileURLToPath } from "url";
+import express from 'express';
+import { Server } from 'socket.io';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import userRoutes from './userRoutes.js';
-import dotenv from "dotenv";
+import dotenv from 'dotenv';
 
 dotenv.config(); // Load environment variables
 
@@ -11,17 +11,17 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const PORT = process.env.PORT || 3500;
-const NODE_ENV = process.env.NODE_ENV || "development";
-const parseOrigins = (origins) =>
-  origins.split(",").map((origin) => origin.trim());
-const isCORSDisabled = process.env.CORS_ORIGIN_PROD === "false";
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const parseOrigins = (origins) => origins.split(',').map((origin) => origin.trim());
+const isCORSDisabled = process.env.CORS_ORIGIN_PROD === 'false';
 const CORS_ORIGIN =
-  NODE_ENV === "production"
+  NODE_ENV === 'production'
     ? isCORSDisabled
       ? false
       : process.env.CORS_ORIGIN_PROD
     : parseOrigins(process.env.CORS_ORIGIN_DEV);
 
+// Initialize Express
 const app = express();
 
 // Middleware to parse JSON requests
@@ -31,12 +31,13 @@ app.use(express.json());
 app.use('/api/users', userRoutes);
 
 // Serve static files
-app.use(express.static(path.join(__dirname, "../client")));
+app.use(express.static(path.join(__dirname, '../client')));
 
 // Fallback route for SPA
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, "../client", "index.html"));
+  res.sendFile(path.join(__dirname, '../client', 'index.html'));
 });
+
 
 let expressServer;
 
@@ -47,8 +48,8 @@ try {
 
   const io = new Server(expressServer, {
     cors: {
-      origin: 'http://localhost:5173',
-      methods: ["GET", "POST"],
+      origin: CORS_ORIGIN,
+      methods: ['GET', 'POST'],
       credentials: true,
     },
   });
@@ -56,6 +57,8 @@ try {
   const chatNsp = io.of('/chat');
 
   chatNsp.on('connection', (socket) => {
+    console.log('New client connected:', socket.id);
+
     socket.emit('message', 'Welcome to chat app!');
 
     socket.on('joinRoom', (room) => {
@@ -65,12 +68,12 @@ try {
 
     socket.on('message', (data) => {
       const { room, message } = data;
-    
+
       if (!message || typeof message !== 'string' || !message.trim()) {
         console.log('Invalid message:', message);
         return;
       }
-    
+
       if (room) {
         chatNsp.to(room).emit('message', `${socket.id.substring(0, 5)}: ${message}`);
       } else {
@@ -78,7 +81,7 @@ try {
       }
     });
 
-    socket.on('typing', () => {
+    socket.on('typing', (room) => {
       if (room) {
         chatNsp.to(room).broadcast.emit('typing', socket.id.substring(0, 5));
       } else {
@@ -96,17 +99,17 @@ try {
   });
 
 } catch (error) {
-  console.error("Error starting the server:", error);
+  console.error('Error starting the server:', error);
   process.exit(1);
 }
 
 // Handle uncaught exceptions and unhandled rejections
-process.on("uncaughtException", (err) => {
-  console.error("Uncaught Exception:", err.stack || err.message);
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err.stack || err.message);
   shutdownGracefully();
 });
-process.on("unhandledRejection", (reason, promise) => {
-  console.error("Unhandled Rejection at:", promise, "reason:", reason);
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
   shutdownGracefully();
 });
 
@@ -114,15 +117,15 @@ process.on("unhandledRejection", (reason, promise) => {
 const shutdownGracefully = () => {
   if (expressServer) {
     expressServer.close(() => {
-      console.log("Closed remaining connections.");
+      console.log('Closed remaining connections.');
       process.exit(0);
     });
     setTimeout(() => {
-      console.error("Forcing server shutdown.");
+      console.error('Forcing server shutdown.');
       process.exit(1);
     }, 10000).unref();
   }
 };
 
-process.on("SIGTERM", shutdownGracefully);
-process.on("SIGINT", shutdownGracefully);
+process.on('SIGTERM', shutdownGracefully);
+process.on('SIGINT', shutdownGracefully);
