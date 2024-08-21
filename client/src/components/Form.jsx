@@ -11,7 +11,7 @@ export const Form = ({ showFeedback }) => {
   const [messages, setMessages] = useState([]);
   const [typingUsers, setTypingUsers] = useState([]);
 
-  const { user } = useContext(AppContext); // Access user context
+  const { user } = useContext(AppContext); 
 
   const socketRef = useRef(null);
   const inputRef = useRef(null);
@@ -26,7 +26,7 @@ export const Form = ({ showFeedback }) => {
     
     socketRef.current = io(`${socketUrl}/chat`, {
       transports: ['websocket'], 
-      query: { username: user?.username || 'Anonymous' } // Send username to server
+      query: { username: user?.username || 'Anonymous' } 
     });
 
     socketRef.current.on('connect_error', (err) => {
@@ -62,7 +62,7 @@ export const Form = ({ showFeedback }) => {
         console.log('Socket.IO Client disconnected');
       }
     };
-  }, [user]); // Depend on user to re-establish connection with new username
+  }, [user]);  
 
   const handleJoinRoom = (e) => {
     e.preventDefault();
@@ -115,8 +115,8 @@ export const Form = ({ showFeedback }) => {
     <div>
       <h1>Chat Application</h1>
 
-      <form onSubmit={handleJoinRoom} className='form-container'>
-      <div className="form-group">
+      <form onSubmit={handleJoinRoom} className='chat-container'>
+      <div className="chat-group">
         <input
           type="text"
           value={room}
@@ -127,8 +127,8 @@ export const Form = ({ showFeedback }) => {
         </div>
       </form>
 
-      <form onSubmit={handleSendMessage} className='form-container'>
-      <div className="form-group">
+      <form onSubmit={handleSendMessage} className='chat-container'>
+      <div className="chat-group">
         <input
           type="text"
           value={message}
