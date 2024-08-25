@@ -156,3 +156,8 @@ ul {
     width: 100%;
   }
 }
+
+.container h2 {
+  margin: 0;
+  padding: 0;
+}

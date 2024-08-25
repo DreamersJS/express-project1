@@ -128,9 +128,7 @@ export const Form = ({ showFeedback }) => {
         </form>
       </div>
 
-
-
-      <div>
+      <>
         {activeRoom && <h2>Messages in {activeRoom}</h2>}
         <ul className='msg-display'>
           {messages.map((msg, index) => {
@@ -155,7 +153,7 @@ export const Form = ({ showFeedback }) => {
         <p className="activity">
           {typingUsers.length > 0 ? `${typingUsers.join(', ')} ${typingUsers.length > 1 ? 'are' : 'is'} typing...` : ''}
         </p>
-      </div>
+      </>
 
       <div className="msg-input">
         <form onSubmit={handleSendMessage} className='chat-container'>
