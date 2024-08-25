@@ -112,7 +112,7 @@ export const Form = ({ showFeedback }) => {
   };
 
   return (
-    <div>
+    <div className='container'>
       <h1>Chat Application</h1>
 
       <form onSubmit={handleJoinRoom} className='chat-container'>
