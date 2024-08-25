@@ -9,12 +9,14 @@ export const Form = ({ showFeedback }) => {
   const [joinedRooms, setJoinedRooms] = useState([]);
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
-  // const [typingUsers, setTypingUsers] = useState([]);
+  const [showScrollButton, setShowScrollButton] = useState(false);
 
   const { user } = useContext(AppContext);
 
   const socketRef = useRef(null);
   const inputRef = useRef(null);
+  const messagesEndRef = useRef(null);
+  const messagesListRef = useRef(null);
 
   useEffect(() => {
     const socketUrl = String(import.meta.env.VITE_SOCKET_URL);
@@ -44,24 +46,34 @@ export const Form = ({ showFeedback }) => {
       setMessages(prevMessages => [...prevMessages, data]);
     });
 
-    // socketRef.current.on('typing', (user) => {
-    //   setTypingUsers(prev => prev.includes(user) ? prev : [...prev, user]);
-    // });
-
-    // socketRef.current.on('stopTyping', (user) => {
-    //   setTypingUsers(prev => prev.filter(u => u !== user));
-    // });
 
     return () => {
       if (socketRef.current) {
         socketRef.current.off('message');
-        socketRef.current.off('typing');
-        socketRef.current.off('stopTyping');
         socketRef.current.disconnect();
         console.log('Socket.IO Client disconnected');
       }
     };
   }, [user]);
+
+  useEffect(() => {
+
+    const isScrolledToBottom = () => {
+      const messagesList = messagesListRef.current;
+      return messagesList.scrollHeight - messagesList.clientHeight <= messagesList.scrollTop + 1;
+    };
+
+    if (isScrolledToBottom()) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      setShowScrollButton(true);
+    }
+  }, [messages]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    setShowScrollButton(false);
+  };
 
   const handleJoinRoom = (e) => {
     e.preventDefault();
@@ -130,7 +142,10 @@ export const Form = ({ showFeedback }) => {
 
       <>
         {activeRoom && <h2>Messages in {activeRoom}</h2>}
-        <ul className='msg-display'>
+        <ul className='msg-display'
+          ref={messagesListRef}
+          onScroll={() => setShowScrollButton(messagesListRef.current.scrollTop < messagesListRef.current.scrollHeight - messagesListRef.current.clientHeight - 1)}
+        >
           {messages.map((msg, index) => {
             let className;
             if (msg.username === user?.username) {
@@ -149,7 +164,20 @@ export const Form = ({ showFeedback }) => {
               </li>
             );
           })}
+
+          {/* This div is used to scroll into view */}
+          <div ref={messagesEndRef} />
         </ul>
+
+        {showScrollButton && (
+          <>
+          <p className='scroll-to-bottom'>
+          <button  onClick={scrollToBottom}>
+            Scroll to Latest
+          </button>
+          </p>
+          </>
+        )}
         {/* <p className="activity">
           {typingUsers.length > 0 ? `${typingUsers.join(', ')} ${typingUsers.length > 1 ? 'are' : 'is'} typing...` : ''}
         </p> */}
