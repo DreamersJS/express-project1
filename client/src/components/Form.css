@@ -1,4 +1,163 @@
 ul {
-    list-style-type: none; 
+  list-style-type: none;
+}
+/* General styles for the container */
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: calc(90vh - 50px);
+  margin-top: 50px;
+  width: 97%;
+  /* background-color: #0000000b; */
+  padding: 4px;
+}
+
+/* Styles for the chat room input form */
+.join-room {
+  margin-top: 0px;
+  margin-bottom: 10px;
+}
+
+.chat-container {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.chat-group {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.chat-group input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+/* Styles for displaying messages */
+.msg-display {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  /* max-width: 600px; */
+  width: 500px;
+  margin: 20px 0;
+  padding: 10px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  height: 300px;
+  overflow-y: auto;
+}
+
+.msg-display li {
+  padding: 10px;
+  margin: 5px 0;
+  border-radius: 4px;
+  background-color: #e9e9e9;
+  position: relative;
+  max-width: 80%;
+}
+.msg-display li.user {
+  padding: 5px;
+  background-color: #007bff98;
+  color: #fff;
+  align-self: flex-end;
+}
+.msg-display li.user::after {
+  content: '';
+  position: absolute;
+  bottom: calc(20% - 16px);
+  right: 0;
+  width: 0;
+  height: 0;
+  border: 5px solid transparent;
+  border-top: 5px solid #007bff98;
+  border-right: 0px solid transparent;
+}
+
+.msg-display li.other {
+  padding: 5px;
+  background-color: #4bfd45ea;
+  color: #fff;
+  align-self: flex-start;
+}
+.msg-display li.other::after {
+  content: '';
+  position: absolute;
+  bottom: calc(20% - 16px);
+  left: 0;
+  width: 0;
+  height: 0;
+  border: 5px solid transparent;
+  border-top: 5px solid #4bfd45ea;
+  border-left: 0px solid transparent;
+}
+.msg-display li.system {
+  padding: 5px;
+  background-color: #f1f1f1;
+  color: #333;
+  align-self: center; /* Centered in the chat container */
+  text-align: center; /* Center text */
+  border: none;
+  font-style: italic; /* Italicize system messages */
+}
+.msg-display li:last-child {
+  border-bottom: none;
+}
+
+/* Styles for the typing indicator */
+.activity {
+  font-style: italic;
+  color: #888;
+}
+
+/* Styles for the message input form */
+.msg-input {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 600px;/* or just delete the line */
+  background-color: #fff;
+  border-top: 1px solid #ddd;
+  /* padding: 10px; */
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin: 0;
+}
+
+.msg-input input {
+  flex: 1;
+  }
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .msg-input {
+    width: 100%;
+    bottom: 0;
+    left: 0;
+    transform: none;
   }
   
+  .msg-input input {
+    width: 80%;
+  }
+
+  .chat-container {
+    width: 100%;
+  }
+}
+
+.container h2 {
+  margin: 0;
+  padding: 0;
+}

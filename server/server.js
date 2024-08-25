@@ -84,17 +84,17 @@ try {
       }
     });
 
-    socket.on('typing', (room) => {
-      if (room) {
-        chatNsp.to(room).broadcast.emit('typing', username || socket.id);
-      } else {
-        chatNsp.broadcast.emit('typing', username || socket.id);
-      }
-    });
+    // socket.on('typing', (room) => {
+    //   if (room) {
+    //     chatNsp.to(room).broadcast.emit('typing', username || socket.id);
+    //   } else {
+    //     chatNsp.broadcast.emit('typing', username || socket.id);
+    //   }
+    // });
 
-    socket.on('stopTyping', () => {
-      socket.broadcast.emit('stopTyping', username || socket.id);
-    });
+    // socket.on('stopTyping', () => {
+    //   socket.broadcast.emit('stopTyping', username || socket.id);
+    // });
 
     socket.on('disconnect', () => {
       console.log('User disconnected from /chat:', socket.id);
