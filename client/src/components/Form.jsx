@@ -9,7 +9,7 @@ export const Form = ({ showFeedback }) => {
   const [joinedRooms, setJoinedRooms] = useState([]);
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
-  const [typingUsers, setTypingUsers] = useState([]);
+  // const [typingUsers, setTypingUsers] = useState([]);
 
   const { user } = useContext(AppContext);
 
@@ -44,13 +44,13 @@ export const Form = ({ showFeedback }) => {
       setMessages(prevMessages => [...prevMessages, data]);
     });
 
-    socketRef.current.on('typing', (user) => {
-      setTypingUsers(prev => prev.includes(user) ? prev : [...prev, user]);
-    });
+    // socketRef.current.on('typing', (user) => {
+    //   setTypingUsers(prev => prev.includes(user) ? prev : [...prev, user]);
+    // });
 
-    socketRef.current.on('stopTyping', (user) => {
-      setTypingUsers(prev => prev.filter(u => u !== user));
-    });
+    // socketRef.current.on('stopTyping', (user) => {
+    //   setTypingUsers(prev => prev.filter(u => u !== user));
+    // });
 
     return () => {
       if (socketRef.current) {
@@ -150,9 +150,9 @@ export const Form = ({ showFeedback }) => {
             );
           })}
         </ul>
-        <p className="activity">
+        {/* <p className="activity">
           {typingUsers.length > 0 ? `${typingUsers.join(', ')} ${typingUsers.length > 1 ? 'are' : 'is'} typing...` : ''}
-        </p>
+        </p> */}
       </>
 
       <div className="msg-input">

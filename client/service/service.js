@@ -59,7 +59,7 @@ export const validateForm = ({ username, email, password }) => {
 
 export const verifyToken = async (token) => {
   try {
-    const response = await fetch("/api/users/verify-token", {
+    const response = await fetch("/api/verify-token", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,

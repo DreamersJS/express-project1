@@ -85,7 +85,8 @@ router.get('/', async (req, res) => {
 });
 
 // Verify token route
-router.post('/verify-token', (req, res) => {
+
+router.post('/api/verify-token', (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) {
     return res.status(401).json({ valid: false });
