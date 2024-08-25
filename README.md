@@ -24,11 +24,11 @@ Chat App with Socket.io is a dynamic, real-time messaging platform designed to f
 - Users can join different chat rooms and send messages within them.
 - The application supports multiple rooms with real-time updates and notifications.
   
-4. Typing Indicators:
+<!-- 4. Typing Indicators:
    
-- The application shows typing indicators to let users know when someone is typing a message.
+- The application shows typing indicators to let users know when someone is typing a message. -->
   
-5. Feedback System:
+4. Feedback System:
    
 - Provides visual feedback for various actions (e.g., joining a room, sending a message, or logging out).
   
