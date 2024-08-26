@@ -44,7 +44,8 @@ Chat App with Socket.io is a dynamic, real-time messaging platform designed to f
 - **Socket.io**: For real-time, bidirectional communication between clients and server.
 - **Bcrypt**: For hashing passwords.
 - **MySQL**: For database management.
-- **ViteProxy** and **CORS**: For handling development server proxies and cross-origin requests.
+- **ViteProxy**: To avoid CORS issues entirely during development by making it seem like the frontend and backend are served from the same origin.
+- **CORS**: For production ensures that only allowed origins can access your API.
 - **jsonwebtoken**: For managing user authentication tokens.
 - **git**: For version control.
 
