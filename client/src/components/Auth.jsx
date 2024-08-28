@@ -12,7 +12,7 @@ export const Auth = ({ children }) => {
       const token = localStorage.getItem('authToken');
       if (token) {
         try {
-          const response = await fetch('/api/verify-token', {
+          const response = await fetch('/verify-token', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
