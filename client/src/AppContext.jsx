@@ -12,24 +12,26 @@ export const AppContextProvider = ({ children }) => {
         const restoreUser = async () => {
             const storedToken = localStorage.getItem('token');
             if (storedToken) {
-                const isValid = await verifyToken(storedToken);
-                if (isValid) {
-                    try {
+                try {
+                    const isValid = await verifyToken(storedToken);
+                    if (isValid) {
                         const userData = await fetchUserDetails(storedToken);
                         setUser(userData);
                         setToken(storedToken);
-                    } catch (error) {
-                        console.error('Error restoring user:', error);
-                        logout(); 
+                    } else {
+                        console.error('Token is invalid or expired');
+                        logout();
                     }
-                } else {
-                    logout();
+                } catch (error) {
+                    console.error('Error fetching user details:', error);
+                    logout(); 
                 }
             }
         };
-
+    
         restoreUser();
     }, []);
+    
 
     // Function to login
     const login = (userData, token) => {

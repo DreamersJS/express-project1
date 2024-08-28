@@ -8,7 +8,8 @@ export const registerUser = async ({ username, password, email }) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(errorText || "Failed to register");
+      const message = errorText || `Failed to register (status: ${response.status})`;
+      throw new Error(message);
     }
 
     return await response.json();
@@ -30,12 +31,13 @@ export const loginUser = async (credentials) => {
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.message || "Failed to login");
+      const message = errorData.message || `Failed to login (status: ${response.status})`;
+      throw new Error(message);
     }
 
     return await response.json();
   } catch (error) {
-    console.error("API Request Error:", error);
+    console.error("API Request Error:", error.message || error);
     throw error;
   }
 };
@@ -59,22 +61,26 @@ export const validateForm = ({ username, email, password }) => {
 
 export const verifyToken = async (token) => {
   try {
-    const response = await fetch("/verify-token", {
+    const response = await fetch("/api/users/verify-token", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
 
+    if (!response.ok) {
+      console.error("Failed to verify token (status:", response.status, ")");
+      return false;
+    }
+
     const data = await response.json();
     return data.valid;
   } catch (error) {
-    console.error("Token verification failed:", error);
+    console.error("Token verification failed:", error.message || error);
     return false;
   }
 };
 
-// Fetch user details with a valid token
 export const fetchUserDetails = async (token) => {
   try {
     const response = await fetch("/api/users/me", {
@@ -85,7 +91,8 @@ export const fetchUserDetails = async (token) => {
     });
 
     if (!response.ok) {
-      throw new Error("Failed to fetch user details");
+      const message = `Failed to fetch user details (status: ${response.status})`;
+      throw new Error(message);
     }
 
     return await response.json();
