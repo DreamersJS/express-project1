@@ -19,28 +19,27 @@ export const registerUser = async ({ username, password, email }) => {
   }
 };
 
-export const loginUser = async (credentials) => {
+export const loginUser = async ({ email, password }) => {
   try {
-    const response = await fetch("/api/users/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(credentials),
+    const response = await fetch('/api/users/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      const message = errorData.message || `Failed to login (status: ${response.status})`;
-      throw new Error(message);
+      const errorText = await response.text();
+      throw new Error(errorText || `Failed to login (status: ${response.status})`);
     }
 
-    return await response.json();
+    const data = await response.json();
+    return data; // This should include { id, username, email, token }
   } catch (error) {
-    console.error("API Request Error:", error.message || error);
+    console.error('Error in loginUser:', error.message || error);
     throw error;
   }
 };
+
 
 export const validateForm = ({ username, email, password }) => {
   if (!username || !email || !password) {

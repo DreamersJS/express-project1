@@ -8,6 +8,7 @@ import { NavBar } from './components/NavBar.jsx';
 // import { Auth } from './components/Auth.jsx';
 import { Authenticated } from './components/Authenticated.jsx';
 import Feedback from './components/Feedback.jsx';
+import { UpdateUser } from './components/UpdateUser.jsx';
 
 function App() {
   const [feedback, setFeedback] = useState({ message: '', type: '' });
@@ -38,6 +39,14 @@ function App() {
           element={
             <Authenticated>
               <Form showFeedback={showFeedback}/>
+            </Authenticated>
+          }
+        />
+        <Route
+          path="/update/:id"
+          element={
+            <Authenticated>
+              <UpdateUser showFeedback={showFeedback}/>
             </Authenticated>
           }
         />

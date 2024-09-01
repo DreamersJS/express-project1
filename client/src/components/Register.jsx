@@ -26,24 +26,15 @@ export const Register = ({ showFeedback }) => {
 
     try {
       const data = await registerUser({ username, password, email });
-      handleToken(data.token);  
       login(data.user, data.token); // Persist user and token
-
-      showFeedback('Registration successful! Redirecting to login...', 'success');
-      navigate('/login'); 
+      showFeedback('Registration successful! Redirecting...', 'success');
+      navigate('/');  // Redirect to home or authenticated area
 
     } catch (err) {
-      showFeedback(err.message || 'Failed to register', 'error');
+      showFeedback(err.message || 'Failed to register. Please try again later.', 'error');
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleToken = (token) => {
-    if (!token) {
-      throw new Error('No token received from the server');
-    }
-    localStorage.setItem('authToken', token);
   };
 
   return (
@@ -84,7 +75,7 @@ export const Register = ({ showFeedback }) => {
           />
         </div>
         <button type="submit" disabled={loading}>
-          Register
+          {loading ? 'Registering...' : 'Register'}
         </button>
       </form>
     </div>
