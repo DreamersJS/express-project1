@@ -20,17 +20,17 @@ export const Login = ({ showFeedback }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
+  
     try {
       const data = await loginUser({ email, password });
-
-      if (!data.username || !data.token) {
-        throw new Error("Username or token is missing in the response");
+  
+      if (!data.username || !data.token || !data.id) {  // Ensure id is included here
+        throw new Error("Username, id, or token is missing in the response");
       }
-
-      // Update context with user info
-      login({ username: data.username, email: data.email }, data.token);
-
+  
+      // Update context with user info, including id
+      login({ id: data.id, username: data.username, email: data.email }, data.token);
+  
       showFeedback('Login successful!', 'success');
       navigate('/chat');
     } catch (err) {
@@ -40,6 +40,7 @@ export const Login = ({ showFeedback }) => {
       setLoading(false);
     }
   };
+  
 
   return (
     <div className="form-container">
