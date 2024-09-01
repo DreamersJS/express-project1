@@ -100,3 +100,27 @@ export const fetchUserDetails = async (token) => {
     throw error;
   }
 };
+
+
+export const putUserDetails = async (user, token) => {
+  try {
+    const response = await fetch(`/api/users/update/${user.id}`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(user)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error updating user: ${response.statusText}`);
+    }
+
+    console.log('User updated:', user);
+    return await response.json();
+  } catch (error) {
+    console.error('Error updating user:', error.message);
+    throw error;
+  }
+}

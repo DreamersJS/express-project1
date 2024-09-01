@@ -33,6 +33,7 @@ router.post('/register', async (req, res) => {
     const userId = result.insertId;
 
     const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    console.log('UserRoutes/register:', { token });
 
     res.status(201).json({ 
       message: 'User registered successfully', 

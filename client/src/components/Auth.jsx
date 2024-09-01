@@ -40,6 +40,10 @@ export const Auth = ({ children }) => {
     verifyToken();
   }, []);
 
+  useEffect(() => {
+    console.log('Token:', token);
+  }, [token]);
+  
   if (loading) {
     return <div>Loading...</div>;
   }
