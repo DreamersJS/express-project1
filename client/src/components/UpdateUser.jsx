@@ -1,29 +1,25 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams } from 'react-router-dom';
-import { AppContext } from '../AppContext.jsx'; 
+import { AppContext } from '../AppContext.jsx';
 import { fetchUserDetails, verifyToken, putUserDetails } from '../../service/service.js';
 
 export const UpdateUser = ({ showFeedback }) => {
-  const { id } = useParams(); 
-  const { user: contextUser } = useContext(AppContext); 
+  const { id } = useParams();
+  const { user: contextUser } = useContext(AppContext);
   const [localUser, setLocalUser] = useState({ username: '', email: '' });
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const handleUpdateUser = async () => {
-      const token = localStorage.getItem('token'); 
+      const token = localStorage.getItem('token');
       if (!token) {
         console.error('No token available');
-        setLoading(false);
         return;
       }
-
-      setLoading(true);
 
       try {
         const isValid = await verifyToken(token);
         if (isValid) {
-          
+
           if (contextUser && contextUser.id === id) {
             // Use user data from context if available
             setLocalUser(contextUser);
@@ -39,8 +35,6 @@ export const UpdateUser = ({ showFeedback }) => {
         }
       } catch (error) {
         console.error('Error fetching user details:', error);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -61,12 +55,9 @@ export const UpdateUser = ({ showFeedback }) => {
       return;
     }
 
-    setLoading(true);
-
-    const token = localStorage.getItem('token'); 
+    const token = localStorage.getItem('token');
     if (!token) {
       console.error('No token available');
-      setLoading(false);
       return;
     }
     try {
@@ -80,8 +71,6 @@ export const UpdateUser = ({ showFeedback }) => {
       }
     } catch (error) {
       console.error('Error updating user:', error.message);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -103,7 +92,7 @@ export const UpdateUser = ({ showFeedback }) => {
         onChange={handleChange}
       />
       <button onClick={handleUpdate} >
-        {loading ? 'Updating...' : 'Update'}
+        Update
       </button>
     </div>
   );
