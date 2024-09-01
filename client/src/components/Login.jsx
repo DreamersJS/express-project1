@@ -25,6 +25,7 @@ export const Login = ({ showFeedback }) => {
       const data = await loginUser({ email, password });
   
       if (!data.username || !data.token || !data.id) {  // Ensure id is included here
+        console.log('LoginData:', data);
         throw new Error("Username, id, or token is missing in the response");
       }
   

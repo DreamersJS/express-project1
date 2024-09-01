@@ -7,6 +7,12 @@ export const AppContextProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [token, setToken] = useState(localStorage.getItem('token'));
 
+    useEffect(() => {
+        console.log('AppContextToken:', token);
+        console.log('User from context:', user);
+      }, [token, user]);
+  
+      
     // Restore user on app load
     useEffect(() => {
         const restoreUser = async () => {
