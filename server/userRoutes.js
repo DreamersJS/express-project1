@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import db from './db.js'; // Import the connection pool
 import dotenv from 'dotenv';
+// import { v4 as uuidv4 } from 'uuid'; 
 
 dotenv.config();
 
@@ -27,6 +28,10 @@ router.post('/register', async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    // const userId = uuidv4();  // Generate a new UUID
+    // await db.query('INSERT INTO users (id, username, email, password_hash) VALUES (?, ?, ?, ?)', [userId, username, email, hashedPassword]);
+
     const [result] = await db.query('INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)', [username, email, hashedPassword]);
 
     // Retrieve the id of the newly created user
