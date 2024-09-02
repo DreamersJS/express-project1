@@ -68,8 +68,8 @@ npm install
 VITE_SOCKET_URL=http://localhost:3000
 
 ```
-This is the server that your frontend will connect to for WebSocket communication or other similar server-side interactions.
-In development, VITE_SOCKET_URL points to http://localhost:3000, which is where your backend server is running locally.
+This is the server that your frontend will connect to for WebSocket communication or other similar server-side interactions.<br>
+In development, VITE_SOCKET_URL points to http://localhost:3000, which is where your backend server is running locally.<br>
 In production, you would typically set VITE_SOCKET_URL to the URL of your production server (e.g., https://api.yourdomain.com).
 
 ### Add .env file in server folder looking like:
@@ -93,43 +93,34 @@ DB_PASSWORD=your_password
 DB_NAME=your_database_name
 
 ```
-PORT=3000:
-
+PORT=3000:  <br>
 This specifies the port number on which your backend server will run. 
 
-NODE_ENV=development:
-
+NODE_ENV=development:<br>
 This environment variable is used to indicate the environment in which your Node.js application is running. Common values include development, production, and test.
 
-JWT_SECRET:
-
+JWT_SECRET:<br>
 This is the secret key used to sign and verify JSON Web Tokens (JWT). JWTs are used for authentication and secure communication between the client and server.
 It’s crucial that this key is kept secure and not shared, as it is the cornerstone of your token's security. In a production environment, this key should be more complex and stored securely.
 
-CORS_ORIGIN_DEV:
-
+CORS_ORIGIN_DEV:<br>
 This setting specifies which origins (i.e., which domains/ports) are allowed to make requests to your server during development.
 Since your frontend is running on http://localhost:5173, this value allows requests from that origin to interact with your backend at http://localhost:3000.
 
-CORS_ORIGIN_PROD:
-
+CORS_ORIGIN_PROD:<br>
 This setting is for the production environment, you would typically set this to the actual domain name where your frontend is hosted (e.g., https://yourdomain.com).
 
-DB_HOST:
-
+DB_HOST:<br>
 This specifies the hostname or IP address of the database server. In this case, localhost indicates that the database is running on the same machine as your backend server. In a production environment, this might point to a remote database server.
 
-DB_USER:
-
+DB_USER:<br>
 This is the username used to connect to the database. Typically set up during the installation of MySQL.
 
-DB_PASSWORD:
-
+DB_PASSWORD:<br>
 This is the password for the database user specified in DB_USER.
 You are usually prompted to set a password for the user during installation. 
 
-DB_NAME:
-
+DB_NAME:<br>
 This specifies the name of the database that your application will connect to,
 means that your application will connect to the your_database_name database using the your_username account.
 
