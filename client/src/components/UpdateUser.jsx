@@ -75,8 +75,11 @@ export const UpdateUser = ({ showFeedback }) => {
   };
 
   return (
-    <div>
+    <>
+    <div className="form-container">
       <h2>Update User</h2>
+      <div className="form-group">
+      <label htmlFor="username">Username:</label>
       <input
         type="text"
         name="username"
@@ -84,6 +87,9 @@ export const UpdateUser = ({ showFeedback }) => {
         placeholder='Enter your new username'
         onChange={handleChange}
       />
+      </div>
+      <div className="form-group">
+      <label htmlFor="email">Email:</label>
       <input
         type="email"
         name="email"
@@ -91,9 +97,11 @@ export const UpdateUser = ({ showFeedback }) => {
         placeholder='Enter your new email'
         onChange={handleChange}
       />
+      </div>
       <button onClick={handleUpdate} >
         Update
       </button>
     </div>
+    </>
   );
 };
