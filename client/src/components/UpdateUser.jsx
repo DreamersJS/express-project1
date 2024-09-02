@@ -7,6 +7,7 @@ export const UpdateUser = ({ showFeedback }) => {
   const { id } = useParams();
   const { user: contextUser } = useContext(AppContext);
   const [localUser, setLocalUser] = useState({ username: '', email: '' });
+  const [initialUser, setInitialUser] = useState({ username: '', email: '' });
 
   useEffect(() => {
     const handleUpdateUser = async () => {
@@ -19,15 +20,16 @@ export const UpdateUser = ({ showFeedback }) => {
       try {
         const isValid = await verifyToken(token);
         if (isValid) {
-
           if (contextUser && contextUser.id === id) {
             // Use user data from context if available
             setLocalUser(contextUser);
+            setInitialUser(contextUser);
           } else {
             // Fetch user details if not available in context
             const userData = await fetchUserDetails(token);
             if (userData.id === id) {
               setLocalUser(userData);
+              setInitialUser(userData);
             }
           }
         } else {
@@ -60,17 +62,29 @@ export const UpdateUser = ({ showFeedback }) => {
       console.error('No token available');
       return;
     }
+    
+    // Check if there are any changes
+    if (JSON.stringify(localUser) === JSON.stringify(initialUser)) {
+      console.log('No changes detected');
+      showFeedback(`No changes detected`, 'info');
+      return; // Do not update if no changes
+    }
+
     try {
       const isValid = await verifyToken(token);
       if (isValid) {
         // Pass the user object with the ID to putUserDetails
         await putUserDetails({ ...localUser, id }, token);
         console.log('User updated successfully');
+        showFeedback(`User updated successfully`, 'info');
+        // Optionally, update initialUser to reflect the latest changes
+        setInitialUser(localUser);
       } else {
         console.error('Token is invalid or expired');
       }
     } catch (error) {
       console.error('Error updating user:', error.message);
+      showFeedback('Error updating user:', 'error');
     }
   };
 
@@ -79,24 +93,24 @@ export const UpdateUser = ({ showFeedback }) => {
     <div className="form-container">
       <h2>Update User</h2>
       <div className="form-group">
-      <label htmlFor="username">Username:</label>
-      <input
-        type="text"
-        name="username"
-        value={localUser.username}
-        placeholder='Enter your new username'
-        onChange={handleChange}
-      />
+        <label htmlFor="username">Username:</label>
+        <input
+          type="text"
+          name="username"
+          value={localUser.username}
+          placeholder='Enter your new username'
+          onChange={handleChange}
+        />
       </div>
       <div className="form-group">
-      <label htmlFor="email">Email:</label>
-      <input
-        type="email"
-        name="email"
-        value={localUser.email}
-        placeholder='Enter your new email'
-        onChange={handleChange}
-      />
+        <label htmlFor="email">Email:</label>
+        <input
+          type="email"
+          name="email"
+          value={localUser.email}
+          placeholder='Enter your new email'
+          onChange={handleChange}
+        />
       </div>
       <button onClick={handleUpdate} >
         Update
