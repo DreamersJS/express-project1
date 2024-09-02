@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import db from './db.js'; // Import the connection pool
 import dotenv from 'dotenv';
-// import { v4 as uuidv4 } from 'uuid'; 
+import { v4 as uuidv4 } from 'uuid'; 
 
 dotenv.config();
 
@@ -29,13 +29,13 @@ router.post('/register', async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // const userId = uuidv4();  // Generate a new UUID
-    // await db.query('INSERT INTO users (id, username, email, password_hash) VALUES (?, ?, ?, ?)', [userId, username, email, hashedPassword]);
+    const userId = uuidv4();  // Generate a new UUID
+    await db.query('INSERT INTO users (id, username, email, password_hash) VALUES (?, ?, ?, ?)', [userId, username, email, hashedPassword]);
 
-    const [result] = await db.query('INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)', [username, email, hashedPassword]);
+    // const [result] = await db.query('INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)', [username, email, hashedPassword]);
 
-    // Retrieve the id of the newly created user
-    const userId = result.insertId;
+    // // Retrieve the id of the newly created user
+    // const userId = result.insertId;
 
     const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1h' });
     console.log('UserRoutes/register:', { token });
@@ -128,28 +128,32 @@ router.get('/me', async (req, res) => {
   }
 
   try {
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-      if (err) {
-        return res.status(401).json({ message: 'Invalid token' });
-      }
-  
-      // Token is valid; proceed with fetching user details
-      const email = decoded.email;
-      db.query('SELECT * FROM users WHERE email = ?', [email], (err, results) => {
-        if (err) {
-          return res.status(500).json({ message: 'Database error', error: err });
-        }
-        if (results.length === 0) {
-          return res.status(404).json({ message: 'User not found' });
-        }
-        res.json(results[0]); // Return the user object, which includes the id, username, and email
-      });
-    }); 
+    // Verify token using the promise version of jwt.verify
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const email = decoded.email;
+
+    // Query user details based on email
+    const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+    const user = rows[0];
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Successfully found the user, return user info
+    res.json(user);
   } catch (error) {
-    console.error('Error validating token:', error);
-    res.status(401).json({ message: 'Invalid token' });
+    // Handle token verification errors or database errors
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+
+    console.error('Error processing /me route:', error);
+    return res.status(500).json({ message: 'Server error', error });
   }
 });
+
 
 
 // Update user details
