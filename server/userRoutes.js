@@ -12,6 +12,19 @@ const router = express.Router();
 // Middleware to parse JSON requests
 router.use(express.json());
 
+// Helper function to get the appropriate secret key based on `kid`
+const getSecretKey = (kid) => {
+  switch (kid) {
+    case 'key1':
+      return process.env.JWT_SECRET_KEY_1;
+    case 'key2':
+      return process.env.JWT_SECRET_KEY_2;
+    // Add more cases if you have more keys
+    default:
+      throw new Error('Invalid key identifier');
+  }
+};
+
 // Register route
 router.post('/register', async (req, res) => {
   const { username, password, email } = req.body;
@@ -32,18 +45,16 @@ router.post('/register', async (req, res) => {
     const userId = uuidv4();  // Generate a new UUID
     await db.query('INSERT INTO users (id, username, email, password_hash) VALUES (?, ?, ?, ?)', [userId, username, email, hashedPassword]);
 
-    // const [result] = await db.query('INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)', [username, email, hashedPassword]);
-
-    // // Retrieve the id of the newly created user
-    // const userId = result.insertId;
-
-    const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    console.log('UserRoutes/register:', { token });
+    const token = jwt.sign(
+      { email },
+      process.env.JWT_SECRET_KEY_1, // Use the current key for signing
+      { expiresIn: '1h', header: { kid: 'key1' } } // Include `kid` in the header
+    );
 
     res.status(201).json({ 
       message: 'User registered successfully', 
       token,
-      id: userId,    // Include the user ID in the response
+      id: userId,
       username,
       email
     });
@@ -53,13 +64,10 @@ router.post('/register', async (req, res) => {
   }
 });
 
-
 // Login route
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
-  console.log('Login request received with:', { email, password });
-  
   if (!email || !password) {
     return res.status(400).json({ message: 'Email and password are required' });
   }
@@ -78,12 +86,16 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign(
+      { email: user.email },
+      process.env.JWT_SECRET_KEY_1, // Use the current key for signing
+      { expiresIn: '1h', header: { kid: 'key1' } } // Include `kid` in the header
+    );
 
     res.status(200).json({
       message: 'Login successful',
       token,
-      id: user.id,  // Include the user ID in the response
+      id: user.id,
       username: user.username,
       email: user.email,
     });
@@ -111,29 +123,36 @@ router.post('/verify-token', (req, res) => {
     return res.status(401).json({ valid: false });
   }
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-    if (err) {
-      return res.status(401).json({ valid: false });
-    }
-    res.json({ valid: true });
-  });
+  try {
+    const decodedHeader = jwt.decode(token, { complete: true });
+    const secretKey = getSecretKey(decodedHeader.header.kid);
+
+    jwt.verify(token, secretKey, (err) => {
+      if (err) {
+        return res.status(401).json({ valid: false });
+      }
+      res.json({ valid: true });
+    });
+  } catch (error) {
+    res.status(401).json({ valid: false });
+  }
 });
 
 // GET /api/users/me - Fetch user details based on token
 router.get('/me', async (req, res) => {
-  const token = req.headers.authorization?.split(' ')[1]; // Assuming Bearer token
+  const token = req.headers.authorization?.split(' ')[1];
 
   if (!token) {
     return res.status(401).json({ message: 'No token provided' });
   }
 
   try {
-    // Verify token using the promise version of jwt.verify
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
+    const decodedHeader = jwt.decode(token, { complete: true });
+    const secretKey = getSecretKey(decodedHeader.header.kid);
+    
+    const decoded = jwt.verify(token, secretKey);
     const email = decoded.email;
 
-    // Query user details based on email
     const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
     const user = rows[0];
 
@@ -141,20 +160,15 @@ router.get('/me', async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Successfully found the user, return user info
     res.json(user);
   } catch (error) {
-    // Handle token verification errors or database errors
     if (error.name === 'JsonWebTokenError') {
       return res.status(401).json({ message: 'Invalid token' });
     }
-
     console.error('Error processing /me route:', error);
     return res.status(500).json({ message: 'Server error', error });
   }
 });
-
-
 
 // Update user details
 router.put('/update/:id', async (req, res) => {
@@ -177,7 +191,6 @@ router.put('/update/:id', async (req, res) => {
     res.status(500).json({ message: 'Error updating user', error });
   }
 });
-
 
 // Delete a user
 router.delete('/delete/:id', async (req, res) => {
