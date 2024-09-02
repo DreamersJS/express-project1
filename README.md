@@ -69,6 +69,8 @@ VITE_SOCKET_URL=http://localhost:3000
 
 ```
 This is the server that your frontend will connect to for WebSocket communication or other similar server-side interactions.
+In development, VITE_SOCKET_URL points to http://localhost:3000, which is where your backend server is running locally.
+In production, you would typically set VITE_SOCKET_URL to the URL of your production server (e.g., https://api.yourdomain.com).
 
 ### Add .env file in server folder looking like:
 
@@ -108,7 +110,9 @@ CORS_ORIGIN_DEV:
 
 This setting specifies which origins (i.e., which domains/ports) are allowed to make requests to your server during development.
 Since your frontend is running on http://localhost:5173, this value allows requests from that origin to interact with your backend at http://localhost:3000.
+
 CORS_ORIGIN_PROD:
+
 This setting is for the production environment, you would typically set this to the actual domain name where your frontend is hosted (e.g., https://yourdomain.com).
 
 DB_HOST:
