@@ -1,7 +1,7 @@
 import express from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import db from './db.js'; // Import the connection pool
+import db from './db.js'; 
 import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid'; 
 
@@ -19,7 +19,6 @@ const getSecretKey = (kid) => {
       return process.env.JWT_SECRET_KEY_1;
     case 'key2':
       return process.env.JWT_SECRET_KEY_2;
-    // Add more cases if you have more keys
     default:
       throw new Error('Invalid key identifier');
   }

@@ -32,6 +32,11 @@ Chat App with Socket.io is a dynamic, real-time messaging platform designed to f
    
 - Provides visual feedback for various actions (e.g., joining a room, sending a message, or logging out).
   
+5. UpdateUser Component:
+   
+- Allows users to update their profile information.
+- Before making an update request, the component checks if any changes were made compared to the initial user data. 
+  
 
 ### Technologies used
 

@@ -42,10 +42,14 @@ export const Form = ({ showFeedback }) => {
     });
 
     socketRef.current.on('message', (data) => {
-      console.log('Received message:', data);
-      setMessages(prevMessages => [...prevMessages, data]);
+      if (typeof data === 'object' && data.username && data.message) {
+        console.log('Received message:', data);
+        setMessages(prevMessages => [...prevMessages, data]);
+      } else {
+        console.error('Received invalid message data:', data);
+        showFeedback('Error: Received invalid message data', 'error');
+      }
     });
-
 
     return () => {
       if (socketRef.current) {
@@ -160,7 +164,8 @@ export const Form = ({ showFeedback }) => {
                 key={index}
                 className={className}
               >
-                {msg.username ? `${msg.username}: ${msg.message}` : msg.message}
+                {/* {msg.username ? `${msg.username}: ${msg.message}` : msg.message} */}
+                {(typeof msg.username === 'string' ? msg.username : 'Unknown') + ': ' + (typeof msg.message === 'string' ? msg.message : 'Invalid message')}
               </li>
             );
           })}
