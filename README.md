@@ -37,6 +37,10 @@ Chat App with Socket.io is a dynamic, real-time messaging platform designed to f
 - Allows users to update their profile information.
 - Before making an update request, the component checks if any changes were made compared to the initial user data. 
   
+6. Suspense and lazy 
+   
+- In React, Suspense and lazy are tools that enable you to improve the loading experience for users.
+  
 
 ### Technologies used
 
