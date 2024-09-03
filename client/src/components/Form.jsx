@@ -2,6 +2,7 @@ import { useRef, useState, useEffect, useContext } from 'react';
 import { AppContext } from '../AppContext';
 import io from 'socket.io-client';
 import './Form.css';
+import { validateMessage } from '../../service/service';
 
  const Form = ({ showFeedback }) => {
   const [room, setRoom] = useState('');
@@ -10,6 +11,9 @@ import './Form.css';
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
   const [showScrollButton, setShowScrollButton] = useState(false);
+  // const [typingUsers, setTypingUsers] = useState([]);
+    const [createRoom, setCreateRoom] = useState('');
+    const [createdRooms, setCreatedRooms] = useState([]);
 
   const { user } = useContext(AppContext);
 
@@ -79,6 +83,21 @@ import './Form.css';
     setShowScrollButton(false);
   };
 
+  const handleCreateRoom = (e) => {
+    e.preventDefault();
+    if (!createRoom.trim()) {
+      showFeedback('Please enter a valid room name.', 'error');
+      console.log('Please enter a valid room name.');
+      return;
+    }
+    console.log(`Creating room: ${createRoom}`);
+    showFeedback(`Created room: ${createRoom}`, 'info');
+    socketRef.current.emit('CreateRoom', createRoom);
+    setActiveRoom(createRoom);
+    setCreateRoom('');
+    setCreatedRooms(prevRooms => [...prevRooms, createRoom]);
+  };
+
   const handleJoinRoom = (e) => {
     e.preventDefault();
 
@@ -94,10 +113,6 @@ import './Form.css';
     setActiveRoom(room);
     setRoom('');
     setJoinedRooms(prevRooms => [...prevRooms, room]);
-  };
-
-  const validateMessage = (message) => {
-    return message && message.trim() !== '';
   };
 
   const handleSendMessage = (e) => {
@@ -130,6 +145,22 @@ import './Form.css';
   return (
     <div className='container'>
 
+{/*Create room*/ }
+<div className="join-room">
+        <form onSubmit={handleCreateRoom} className='chat-container'>
+          <div className="chat-group">
+            <input
+              type="text"
+              value={createRoom}
+              onChange={(e) => setCreateRoom(e.target.value)}
+              placeholder="Enter room name"
+            />
+            <button type="submit">Create Room</button>
+          </div>
+        </form>
+      </div>
+
+{/*Join room*/ }
       <div className="join-room">
         <form onSubmit={handleJoinRoom} className='chat-container'>
           <div className="chat-group">

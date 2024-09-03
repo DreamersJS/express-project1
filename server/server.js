@@ -4,6 +4,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import userRoutes from './userRoutes.js';
 import dotenv from 'dotenv';
+import { v4 as uuidv4 } from 'uuid';
+import db from './db.js'; 
 
 dotenv.config(); // Load environment variables
 
@@ -38,6 +40,12 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../client', 'index.html'));
 });
 
+app._router.stack.forEach(middleware => {
+  if (middleware.route) {
+    console.log(middleware.route);
+  }
+});
+
 let expressServer;
 
 try {
@@ -62,13 +70,67 @@ try {
 
     socket.emit('message', { username: 'System', message: 'Welcome to chat app!' });
 
-    socket.on('joinRoom', (room) => {
-      socket.join(room);
-      chatNsp.to(room).emit('message', { username: 'System', message: `User ${username || socket.id} joined ${room}` });
-    });
+// Create a new room and join it
+socket.on('createRoom', async (roomName) => {
+  console.log('socket.on createRoom hit', roomName);
+
+  try {
+        // Check if the room already exists
+        const [existingRooms] = await db.query('SELECT id FROM rooms WHERE name = ?', [roomName]);
+
+        if (existingRooms.length > 0) {
+          // Room already exists
+          const roomId = existingRooms[0].id;
+          socket.join(roomId); // Join the existing room
+          socket.emit('roomCreated', { roomId, roomName, message: 'Room already exists' }); // Notify client
+          chatNsp.to(roomId).emit('message', { username: 'System', message: `${username || socket.id} has joined the room ${roomName}` });
+          return;
+        }
+    
+        // Create a new room if it doesn't exist
+    const roomId = uuidv4(); 
+    await db.query('INSERT INTO rooms (id, name) VALUES (?, ?)', [roomId, roomName]); 
+
+    socket.join(roomId); 
+    socket.emit('roomCreated', { roomId, roomName }); 
+    console.log('Room created and socket joined:', roomId);
+
+  } catch (error) {
+    console.error('Error creating room:', error);
+    socket.emit('error', { message: 'Failed to create room' }); 
+  }
+});
+
+  
+socket.on('joinRoom', async (roomName) => {
+  console.log('socket.on joinRoom hit');
+
+  try {
+
+      const [rows] = await db.query('SELECT id FROM rooms WHERE name = ?', [roomName]);
+      const room = rows[0];
+
+      if (room) {
+        console.log('Room found:', room);
+          socket.join(room.id);
+          chatNsp.to(room.id).emit('message', { username: 'System', message: `${username || socket.id} has joined the room ${roomName}` });
+      } else {
+          socket.emit('error', { message: 'Room not found' });
+      }
+  } catch (error) {
+      console.error('Error joining room:', error);
+      socket.emit('error', { message: 'Failed to join room' });
+  }
+});
+
+    
+  
 
     socket.on('message', (data) => {
+      console.log('socket.on message hit');
+
       const { room, message, username } = data;
+      console.log('message room:', room);
 
       if (!message || typeof message !== 'string' || !message.trim()) {
         console.log('Invalid message:', message);
@@ -84,6 +146,20 @@ try {
       }
     });
 
+    // socket.on('typing', () => {
+    //   const room = Array.from(socket.rooms).find(r => r !== socket.id);
+    //   if (room) {
+    //     socket.broadcast.to(room).emit('typing', username);
+    //   }
+    // });
+    
+    // socket.on('stopTyping', () => {
+    //   const room = Array.from(socket.rooms).find(r => r !== socket.id);
+    //   if (room) {
+    //     socket.broadcast.to(room).emit('stopTyping', username);
+    //   }
+    // });
+    
 
     socket.on('disconnect', () => {
       console.log('User disconnected from /chat:', socket.id);

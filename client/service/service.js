@@ -124,3 +124,7 @@ export const putUserDetails = async (user, token) => {
     throw error;
   }
 }
+
+export const validateMessage = (message) => {
+  return message && message.trim() !== '';
+};
