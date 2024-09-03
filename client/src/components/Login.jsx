@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../AppContext';
 import { loginUser } from '../../service/service.js';
 
-export const Login = ({ showFeedback }) => {
+ const Login = ({ showFeedback }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -14,24 +14,25 @@ export const Login = ({ showFeedback }) => {
   useEffect(() => {
     if (user) {
       console.log('User updated:', user);
+      navigate('/chat');  // Redirect if user is already logged in
     }
-  }, [user]);
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-  
+
     try {
       const data = await loginUser({ email, password });
-  
-      if (!data.username || !data.token || !data.id) {  // Ensure id is included here
+
+      if (!data || !data.username || !data.token || !data.id) {
         console.log('LoginData:', data);
         throw new Error("Username, id, or token is missing in the response");
       }
-  
+
       // Update context with user info, including id
       login({ id: data.id, username: data.username, email: data.email }, data.token);
-  
+
       showFeedback('Login successful!', 'success');
       navigate('/chat');
     } catch (err) {
@@ -41,7 +42,6 @@ export const Login = ({ showFeedback }) => {
       setLoading(false);
     }
   };
-  
 
   return (
     <div className="form-container">
@@ -70,9 +70,11 @@ export const Login = ({ showFeedback }) => {
           />
         </div>
         <button type="submit" disabled={loading}>
-          Login
+          {loading ? 'Logging in...' : 'Login'}
         </button>
       </form>
     </div>
   );
 };
+
+export default Login;

@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { AppContext } from '../AppContext.jsx';
 import { fetchUserDetails, verifyToken, putUserDetails } from '../../service/service.js';
 
-export const UpdateUser = ({ showFeedback }) => {
+ const UpdateUser = ({ showFeedback }) => {
   const { id } = useParams();
   const { user: contextUser } = useContext(AppContext);
   const [localUser, setLocalUser] = useState({ username: '', email: '' });
@@ -119,3 +119,5 @@ export const UpdateUser = ({ showFeedback }) => {
     </>
   );
 };
+
+export default UpdateUser;

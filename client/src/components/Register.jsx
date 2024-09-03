@@ -4,7 +4,7 @@ import { validateForm, registerUser } from '../../service/service.js';
 import { AppContext } from '../AppContext.jsx';
 import './Register.css'; 
 
-export const Register = ({ showFeedback }) => {
+ const Register = ({ showFeedback }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
@@ -28,7 +28,7 @@ export const Register = ({ showFeedback }) => {
       const data = await registerUser({ username, password, email });
       login(data.user, data.token); // Persist user and token
       showFeedback('Registration successful! Redirecting...', 'success');
-      navigate('/');  // Redirect to home or authenticated area
+      navigate('/chat');  // Redirect to home or authenticated area
 
     } catch (err) {
       showFeedback(err.message || 'Failed to register. Please try again later.', 'error');
@@ -81,3 +81,5 @@ export const Register = ({ showFeedback }) => {
     </div>
   );
 };
+
+export default Register;
