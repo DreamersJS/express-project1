@@ -4,7 +4,7 @@ import { validateForm, registerUser } from '../../service/service.js';
 import { AppContext } from '../AppContext.jsx';
 import './Register.css'; 
 
-export const Register = ({ showFeedback }) => {
+ const Register = ({ showFeedback }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
@@ -81,3 +81,5 @@ export const Register = ({ showFeedback }) => {
     </div>
   );
 };
+
+export default Register;

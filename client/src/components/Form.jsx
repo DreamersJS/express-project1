@@ -3,7 +3,7 @@ import { AppContext } from '../AppContext';
 import io from 'socket.io-client';
 import './Form.css';
 
-export const Form = ({ showFeedback }) => {
+ const Form = ({ showFeedback }) => {
   const [room, setRoom] = useState('');
   const [activeRoom, setActiveRoom] = useState('');
   const [joinedRooms, setJoinedRooms] = useState([]);
@@ -207,3 +207,5 @@ export const Form = ({ showFeedback }) => {
     </div>
   );
 };
+
+export default Form;

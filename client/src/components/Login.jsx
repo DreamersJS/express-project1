@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../AppContext';
 import { loginUser } from '../../service/service.js';
 
-export const Login = ({ showFeedback }) => {
+ const Login = ({ showFeedback }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -76,3 +76,5 @@ export const Login = ({ showFeedback }) => {
     </div>
   );
 };
+
+export default Login;
