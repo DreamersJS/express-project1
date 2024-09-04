@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, lazy, Suspense } from 'react';
 import './App.css';
 import { Authenticated } from './components/Authenticated.jsx';
@@ -27,29 +27,31 @@ function App() {
       <NavBar showFeedback={showFeedback} />
       <Feedback message={feedback?.message} type={feedback?.type} />
       <Suspense fallback={<div>Loading...</div>}>
-      <ErrorBoundary>
-        <Routes>
-          <Route path="/register" element={<Register showFeedback={showFeedback} />} />
-          <Route path="/login" element={<Login showFeedback={showFeedback}/>} />
-          {/* Protected routes */}
-          <Route
-          path="/chat"
-          element={
-            <Authenticated>
-              <Form showFeedback={showFeedback}/>
-            </Authenticated>
-          }
-        />
-        <Route
-          path="/update/:id"
-          element={
-            <Authenticated>
-              <UpdateUser showFeedback={showFeedback}/>
-            </Authenticated>
-          }
-        />
-          <Route path="*" element={<div>404 - Page Not Found</div>} />
-        </Routes>
+        <ErrorBoundary>
+          <Routes>
+            <Route path="/" element={<Navigate to="/chat" replace />} />
+
+            <Route path="/register" element={<Register showFeedback={showFeedback} />} />
+            <Route path="/login" element={<Login showFeedback={showFeedback} />} />
+            {/* Protected routes */}
+            <Route
+              path="/chat"
+              element={
+                <Authenticated>
+                  <Form showFeedback={showFeedback} />
+                </Authenticated>
+              }
+            />
+            <Route
+              path="/update/:id"
+              element={
+                <Authenticated>
+                  <UpdateUser showFeedback={showFeedback} />
+                </Authenticated>
+              }
+            />
+            <Route path="*" element={<div>404 - Page Not Found</div>} />
+          </Routes>
         </ErrorBoundary>
       </Suspense>
     </BrowserRouter>

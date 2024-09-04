@@ -32,6 +32,7 @@ export const useRoom = (socket, showFeedback) => {
    * @param {string} newRoomName 
    */
   const joinRoom = (newRoomName) => {
+    try {
     if (socket.current && newRoomName !== room.name) {
       if (room.id) {
         // Leave the current room
@@ -39,7 +40,12 @@ export const useRoom = (socket, showFeedback) => {
       }
       // Join the new room
       socket.current.emit('joinRoom', newRoomName);
+      console.log(`Joining room: ${newRoomName} with socket ID: ${socket.id}`);
     }
+  } catch (error) {
+      console.error('Error creating/joining room:', error);
+      socket.emit('error', { message: 'Failed to join room' });
+  }
   };
 
   return { room, joinRoom }; // Return the room state and the joinRoom function
