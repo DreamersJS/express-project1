@@ -41,6 +41,16 @@ Chat App with Socket.io is a dynamic, real-time messaging platform designed to f
    
 - In React, Suspense and lazy are tools that enable you to improve the loading experience for users.
   
+7. rooms and messages are stored in MySQL now
+- Not knowing about the foreign key importance, made me adding console.log-s, debug over and over again for hours, finally found some info in w3schools:
+
+```
+ALTER TABLE Orders
+ADD CONSTRAINT FK_PersonOrder
+FOREIGN KEY (PersonID) REFERENCES Persons(PersonID);
+```
+(this is an example)
+
 
 ### Technologies used
 
