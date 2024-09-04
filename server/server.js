@@ -141,20 +141,6 @@ try {
       }
     });
 
-    // socket.on('typing', () => {
-    //   const room = Array.from(socket.rooms).find(r => r !== socket.id);
-    //   if (room) {
-    //     socket.broadcast.to(room).emit('typing', username);
-    //   }
-    // });
-
-    // socket.on('stopTyping', () => {
-    //   const room = Array.from(socket.rooms).find(r => r !== socket.id);
-    //   if (room) {
-    //     socket.broadcast.to(room).emit('stopTyping', username);
-    //   }
-    // });
-
 
     socket.on('disconnect', () => {
       console.log('User disconnected from /chat:', socket.id);

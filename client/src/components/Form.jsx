@@ -10,13 +10,12 @@ const Form = ({ showFeedback }) => {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
   const [showScrollButton, setShowScrollButton] = useState(false);
-  // const [typingUsers, setTypingUsers] = useState([]);
 
   const socketRef = useRef(null);
   const inputRef = useRef(null);
   const messagesEndRef = useRef(null);
   const messagesListRef = useRef(null);
-  
+
   const { user } = useContext(AppContext);
   // Use the custom hook to get the current room
   const { room, joinRoom } = useRoom(socketRef, showFeedback);
@@ -116,17 +115,8 @@ const Form = ({ showFeedback }) => {
 
   const handleInputChange = (e) => {
     setMessage(e.target.value);
-    if (e.target.value) {
-      socketRef.current.emit('typing');
-    } else {
-      socketRef.current.emit('stopTyping');
-    }
   };
-
-  const handleBlur = () => {
-    socketRef.current.emit('stopTyping');
-  };
-
+  
   return (
     <div className='container'>
 
@@ -165,7 +155,6 @@ const Form = ({ showFeedback }) => {
                 key={index}
                 className={className}
               >
-                {/* {msg.username ? `${msg.username}: ${msg.message}` : msg.message} */}
                 {(typeof msg.username === 'string' ? msg.username : 'Unknown') + ': ' + (typeof msg.message === 'string' ? msg.message : 'Invalid message')}
               </li>
             );
@@ -184,9 +173,6 @@ const Form = ({ showFeedback }) => {
             </p>
           </>
         )}
-        {/* <p className="activity">
-          {typingUsers.length > 0 ? `${typingUsers.join(', ')} ${typingUsers.length > 1 ? 'are' : 'is'} typing...` : ''}
-        </p> */}
       </>
 
       <div className="msg-input">
@@ -196,7 +182,6 @@ const Form = ({ showFeedback }) => {
               type="text"
               value={message}
               onChange={handleInputChange}
-              onBlur={handleBlur}
               placeholder="Enter message"
               ref={inputRef}
             />
