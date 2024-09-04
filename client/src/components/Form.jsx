@@ -3,24 +3,23 @@ import { AppContext } from '../AppContext';
 import io from 'socket.io-client';
 import './Form.css';
 import { validateMessage } from '../../service/service';
+import { useRoom } from '../customHooks/useRoom';
 
- const Form = ({ showFeedback }) => {
-  const [room, setRoom] = useState('');
-  const [activeRoom, setActiveRoom] = useState('');
-  const [joinedRooms, setJoinedRooms] = useState([]);
+const Form = ({ showFeedback }) => {
+  const [newRoomName, setNewRoomName] = useState('');
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
   const [showScrollButton, setShowScrollButton] = useState(false);
   // const [typingUsers, setTypingUsers] = useState([]);
-    const [createRoom, setCreateRoom] = useState('');
-    const [createdRooms, setCreatedRooms] = useState([]);
-
-  const { user } = useContext(AppContext);
 
   const socketRef = useRef(null);
   const inputRef = useRef(null);
   const messagesEndRef = useRef(null);
   const messagesListRef = useRef(null);
+  
+  const { user } = useContext(AppContext);
+  // Use the custom hook to get the current room
+  const { room, joinRoom } = useRoom(socketRef, showFeedback);
 
   useEffect(() => {
     const socketUrl = String(import.meta.env.VITE_SOCKET_URL);
@@ -83,43 +82,28 @@ import { validateMessage } from '../../service/service';
     setShowScrollButton(false);
   };
 
-  const handleCreateRoom = (e) => {
-    e.preventDefault();
-    if (!createRoom.trim()) {
-      showFeedback('Please enter a valid room name.', 'error');
-      console.log('Please enter a valid room name.');
-      return;
-    }
-    console.log(`Creating room: ${createRoom}`);
-    showFeedback(`Created room: ${createRoom}`, 'info');
-    socketRef.current.emit('CreateRoom', createRoom);
-    setActiveRoom(createRoom);
-    setCreateRoom('');
-    setCreatedRooms(prevRooms => [...prevRooms, createRoom]);
-  };
-
   const handleJoinRoom = (e) => {
     e.preventDefault();
 
-    if (!room.trim()) {
+    if (!newRoomName.trim()) {
       showFeedback('Please enter a valid room name.', 'error');
       console.log('Please enter a valid room name.');
       return;
     }
-
-    console.log(`Joining room: ${room}`);
-    showFeedback(`Joined room: ${room}`, 'info');
-    socketRef.current.emit('joinRoom', room);
-    setActiveRoom(room);
-    setRoom('');
-    setJoinedRooms(prevRooms => [...prevRooms, room]);
+    if (newRoomName.trim()) {
+      joinRoom(newRoomName); // This will handle leaving the current room and joining the new one
+      setNewRoomName(''); // Clear the input field after joining
+      socketRef.current.emit('joinRoom', room);
+      showFeedback(`Joined room: ${room}`, 'info');
+    }
   };
 
   const handleSendMessage = (e) => {
     e.preventDefault();
     if (validateMessage(message)) {
       const payload = {
-        room: activeRoom || null,
+        roomId: room.id || null, // Use room ID from the custom hook
+        roomName: room.name || null, // Use room name from the custom hook
         message,
         username: user?.username || 'Anonymous',
       };
@@ -128,6 +112,7 @@ import { validateMessage } from '../../service/service';
     }
     inputRef.current.focus();
   };
+
 
   const handleInputChange = (e) => {
     setMessage(e.target.value);
@@ -145,29 +130,14 @@ import { validateMessage } from '../../service/service';
   return (
     <div className='container'>
 
-{/*Create room*/ }
-<div className="join-room">
-        <form onSubmit={handleCreateRoom} className='chat-container'>
-          <div className="chat-group">
-            <input
-              type="text"
-              value={createRoom}
-              onChange={(e) => setCreateRoom(e.target.value)}
-              placeholder="Enter room name"
-            />
-            <button type="submit">Create Room</button>
-          </div>
-        </form>
-      </div>
-
-{/*Join room*/ }
+      {/*Join room*/}
       <div className="join-room">
         <form onSubmit={handleJoinRoom} className='chat-container'>
           <div className="chat-group">
             <input
               type="text"
-              value={room}
-              onChange={(e) => setRoom(e.target.value)}
+              value={newRoomName}
+              onChange={(e) => setNewRoomName(e.target.value)}
               placeholder="Enter room name"
             />
             <button type="submit">Join Room</button>
@@ -176,7 +146,7 @@ import { validateMessage } from '../../service/service';
       </div>
 
       <>
-        {activeRoom && <h2>Messages in {activeRoom}</h2>}
+        {room.name && <h2>Messages in {room.name}</h2>}
         <ul className='msg-display'
           ref={messagesListRef}
           onScroll={() => setShowScrollButton(messagesListRef.current.scrollTop < messagesListRef.current.scrollHeight - messagesListRef.current.clientHeight - 1)}
@@ -207,11 +177,11 @@ import { validateMessage } from '../../service/service';
 
         {showScrollButton && (
           <>
-          <p className='scroll-to-bottom'>
-          <button  onClick={scrollToBottom}>
-            Scroll to Latest
-          </button>
-          </p>
+            <p className='scroll-to-bottom'>
+              <button onClick={scrollToBottom}>
+                Scroll to Latest
+              </button>
+            </p>
           </>
         )}
         {/* <p className="activity">
