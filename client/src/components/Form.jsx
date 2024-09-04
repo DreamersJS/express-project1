@@ -2,7 +2,7 @@ import { useRef, useState, useEffect, useContext } from 'react';
 import { AppContext } from '../AppContext';
 import io from 'socket.io-client';
 import './Form.css';
-import { validateMessage } from '../../service/service';
+import { validateMessage, sendMessage } from '../../service/service';
 import { useRoom } from '../customHooks/useRoom';
 
 const Form = ({ showFeedback }) => {
@@ -44,10 +44,15 @@ const Form = ({ showFeedback }) => {
     });
 
     socketRef.current.on('message', (data) => {
-      if (typeof data === 'object' && data.username && data.message) {
-        console.log('Received message:', data);
-        setMessages(prevMessages => [...prevMessages, data]);
-      } else {
+      try {
+        console.log('Message received from server:', data);
+        if (data && data.username && data.message) {
+          setMessages(prevMessages => [...prevMessages, data]);
+        } else {
+          console.error('Received unexpected message format:', data);
+          showFeedback('Error: Received invalid message format', 'error');
+        }
+      } catch (error) {
         console.error('Received invalid message data:', data);
         showFeedback('Error: Received invalid message data', 'error');
       }
@@ -82,29 +87,43 @@ const Form = ({ showFeedback }) => {
 
   const handleJoinRoom = (e) => {
     e.preventDefault();
-    if (newRoomName.trim()) {
-      joinRoom(newRoomName);
-      setNewRoomName('');
-      socketRef.current.emit('joinRoom', room);
-      showFeedback(`Joined room: ${room}`, 'info');
-    } else {
-      showFeedback('Please enter a valid room name.', 'error');
+    try {
+      if (newRoomName.trim()) {
+        joinRoom(newRoomName);
+        setNewRoomName('');
+        socketRef.current.emit('joinRoom', room);
+        showFeedback(`Joined room: ${room}`, 'info');
+      } else {
+        showFeedback('Please enter a valid room name.', 'error');
+      }
+    } catch (error) {
+      console.error('Error joining room:', error);
+      showFeedback('Error: Failed to join room', 'error');
     }
   };
 
   const handleSendMessage = (e) => {
     e.preventDefault();
-    if (validateMessage(message)) {
-      const payload = {
-        roomId: room?.id || null,
-        roomName: room?.name || null,
-        message,
-        username: user?.username || 'Anonymous',
-      };
-      socketRef.current.emit('message', payload);
-      setMessage('');
+    try {
+      if (validateMessage(message)) {
+        const payload = {
+          roomId: room?.id || null,
+          roomName: room?.name || null,
+          message,
+          username: user?.username || 'Anonymous',
+        };
+        socketRef.current.emit('message', payload);
+        
+        // sendMessage(socketRef.current, room?.id, message, user?.username);
+        setMessage('');
+        inputRef.current.focus();
+      } else {
+        showFeedback('Please enter a valid message.', 'error');
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      showFeedback('Error: Failed to send message', 'error');
     }
-    inputRef.current.focus();
   };
 
   const handleInputChange = (e) => {
@@ -135,8 +154,8 @@ const Form = ({ showFeedback }) => {
           const className = msg.username === user?.username
             ? 'user'
             : msg.username === 'System'
-            ? 'system'
-            : 'other';
+              ? 'system'
+              : 'other';
           return (
             <li key={index} className={className}>
               {(typeof msg.username === 'string' ? msg.username : 'Unknown') + ': ' + (typeof msg.message === 'string' ? msg.message : 'Invalid message')}

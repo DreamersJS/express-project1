@@ -122,30 +122,38 @@ try {
   });
 
 
-    socket.on('message', async (data) => {
-      console.log('socket.on message hit');
-      const { roomId, message, username } = data;
-      console.log('message roomId:', roomId);
-      console.log('message :', message);
-      console.log('message username:', username);
+  socket.on('message', async (data) => {
+    const { roomId, message, username } = data;
+    const checkRoomExists = async (roomId) => {
+      const [rows] = await db.query('SELECT id FROM rooms WHERE id = ?', [roomId]);
+      return rows.length > 0;
+    };
+    
+    if (!message || typeof message !== 'string' || !message.trim()) {
+      console.log('Invalid message:', message);
+      return;
+    }
 
+    const messageWithUsername = { username: username || 'Anonymous', message };
 
-      if (!message || typeof message !== 'string' || !message.trim()) {
-        console.log('Invalid message:', message);
-        return;
-      }
-
-      const messageWithUsername = { username: username || 'Anonymous', message };
-
-      if (roomId) {
+    if (roomId) {
+      if (await checkRoomExists(roomId)) {
         const messageId = uuidv4();
-        console.log('messageId :', messageId);
-        await db.query('INSERT INTO messages (id, room_id, username, message) VALUES (?, ?, ?, ?)', [messageId, roomId, username, message]);
-        chatNsp.to(roomId).emit('message', messageWithUsername);
+        try {
+          chatNsp.to(roomId).emit('message', messageWithUsername);
+          await db.query('INSERT INTO messages (id, room_id, username, message) VALUES (?, ?, ?, ?)', [messageId, roomId, username, message]);
+          console.log('Message inserted successfully');
+        } catch (error) {
+          console.error('Database insert error:', error);
+        }
       } else {
-        chatNsp.emit('message', messageWithUsername);
+        console.error('Room does not exist:', roomId);
       }
-    });
+    } else {
+      chatNsp.emit('message', messageWithUsername);
+    }
+  });
+  
 
 
     socket.on('disconnect', () => {
