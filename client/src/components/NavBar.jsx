@@ -13,7 +13,7 @@ export const NavBar = ({ selected, showFeedback }) => {
         navigate('/login');
     };
 
-    console.log({user});
+    console.log({ user });
 
     return (
         <header className="sticky-header">
@@ -42,13 +42,11 @@ export const NavBar = ({ selected, showFeedback }) => {
                         <>
                             <li>
                                 <span>
-                                    Welcome, {user?.username || 'User'}!
+                                    Welcome, 
+                                    <NavLink to={`/update/${user.id}`} className={selected === "update" ? "active" : ""} aria-label="Go to update user info page">
+                                        {user?.username || 'User'}!
+                                    </NavLink>
                                 </span>
-                            </li>
-                            <li>
-                                <NavLink to={`/update/${user.id}`} className={selected === "update" ? "active" : ""}  aria-label="Go to update user info page">
-                                    Update user info
-                                </NavLink>
                             </li>
                             <li>
                                 <button onClick={handleLogout} aria-label="Logout">
