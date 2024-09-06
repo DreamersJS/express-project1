@@ -62,77 +62,17 @@ Chat App with Socket.io is a dynamic, real-time messaging platform designed to f
 - Zvezda Neycheva - [@DreamersJS](https://github.com/DreamersJS)
 
 
-### Instalation
+### Installation
 
+1. **Install Dependencies**:
+   
 To install dependencies for both the client and server, run the following command in the respective root directories:
 
 ```bash
 npm install
 ```
-### Add .env file in client folder looking like:
- add the .env files to .gitignore to avoid committing sensitive information.
-
-```
-VITE_SOCKET_URL=http://localhost:3000
-
-```
-This is the server that your frontend will connect to for WebSocket communication or other similar server-side interactions.<br>
-In development, VITE_SOCKET_URL points to http://localhost:3000, which is where your backend server is running locally.<br>
-In production, you would typically set VITE_SOCKET_URL to the URL of your production server (e.g., https://api.yourdomain.com).
-
-### Add .env file in server folder looking like:
-
-```
-# Server Configuration
-PORT=3000
-NODE_ENV=development
-
-# JWT Secret
-JWT_SECRET_KEY_1=your_current_secret_key
-JWT_SECRET_KEY_2=your_next_secret_key
-
-# CORS Configuration
-CORS_ORIGIN_DEV=http://localhost:5173
-CORS_ORIGIN_PROD=your_production_domain
-
-# Database Configuration
-DB_HOST=localhost
-DB_USER=your_username
-DB_PASSWORD=your_password
-DB_NAME=your_database_name
-
-```
-PORT=3000:  <br>
-This specifies the port number on which your backend server will run. 
-
-NODE_ENV=development:<br>
-This environment variable is used to indicate the environment in which your Node.js application is running. Common values include development, production, and test.
-
-JWT_SECRET:<br>
-Updated the environment variables to include multiple secret keys.
-Rotating your JWT secret key in production is an important security measure that helps minimize risk.
-This allows you to continue verifying tokens signed with the old key while moving forward with a new one.
-
-CORS_ORIGIN_DEV:<br>
-This setting specifies which origins (i.e., which domains/ports) are allowed to make requests to your server during development.
-Since your frontend is running on http://localhost:5173, this value allows requests from that origin to interact with your backend at http://localhost:3000.
-
-CORS_ORIGIN_PROD:<br>
-This setting is for the production environment, you would typically set this to the actual domain name where your frontend is hosted (e.g., https://yourdomain.com).
-
-DB_HOST:<br>
-This specifies the hostname or IP address of the database server. In this case, localhost indicates that the database is running on the same machine as your backend server. In a production environment, this might point to a remote database server.
-
-DB_USER:<br>
-This is the username used to connect to the database. Typically set up during the installation of MySQL.
-
-DB_PASSWORD:<br>
-This is the password for the database user specified in DB_USER.
-You are usually prompted to set a password for the user during installation. 
-
-DB_NAME:<br>
-This specifies the name of the database that your application will connect to,
-means that your application will connect to the your_database_name database using the your_username account.
+2. **Environment Variables**:
+      - Follow the instructions in the [Configuration Guide](./CONFIGURATION_GUIDE.md) to set up environment variables.
 
 
 
