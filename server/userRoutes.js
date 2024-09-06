@@ -1,9 +1,9 @@
 import express from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import db from './db.js'; 
+import db from './db.js';
 import dotenv from 'dotenv';
-import { v4 as uuidv4 } from 'uuid'; 
+import { v4 as uuidv4 } from 'uuid';
 
 dotenv.config();
 
@@ -50,8 +50,8 @@ router.post('/register', async (req, res) => {
       { expiresIn: '1h', header: { kid: 'key1' } } // Include `kid` in the header
     );
 
-    res.status(201).json({ 
-      message: 'User registered successfully', 
+    res.status(201).json({
+      message: 'User registered successfully',
       token,
       id: userId,
       username,
@@ -148,7 +148,7 @@ router.get('/me', async (req, res) => {
   try {
     const decodedHeader = jwt.decode(token, { complete: true });
     const secretKey = getSecretKey(decodedHeader.header.kid);
-    
+
     const decoded = jwt.verify(token, secretKey);
     const email = decoded.email;
 
@@ -225,16 +225,16 @@ router.get('/rooms', async (req, res) => {
 // Backend API route to GET messages from a specific room
 router.get('/rooms/:roomName/messages', async (req, res) => {
   const { roomName } = req.params;
-  console.log({ roomName });
-      // Make sure `roomName` is a string and not an object
-    if (typeof roomName !== 'string') {
-      console.log('userRoutes.js: roomName must be a string');
-      throw new Error('Room name must be a string');
-    }
+
+  // Make sure `roomName` is a string and not an object
+  if (typeof roomName !== 'string') {
+    console.log('userRoutes.js: roomName must be a string');
+    throw new Error('Room name must be a string');
+  }
   try {
     const [roomRows] = await db.query('SELECT id FROM rooms WHERE name = ?', [roomName]);
     const room = roomRows[0];
-console.log('Room:', room);
+
     if (!room) {
       return res.status(404).json({ message: 'Room not found' });
     }

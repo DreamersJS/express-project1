@@ -42,14 +42,6 @@ function App() {
                 </Authenticated>
               }
             />
-                        <Route
-              path="/rooms/:roomName/messages"
-              element={
-                <Authenticated>
-                  <Form showFeedback={showFeedback} />
-                </Authenticated>
-              }
-            />
             <Route
               path="/update/:id"
               element={

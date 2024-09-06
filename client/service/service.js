@@ -40,7 +40,6 @@ export const loginUser = async ({ email, password }) => {
   }
 };
 
-
 export const validateForm = ({ username, email, password }) => {
   if (!username || !email || !password) {
     return "All fields are required";
@@ -101,7 +100,6 @@ export const fetchUserDetails = async (token) => {
   }
 };
 
-
 export const putUserDetails = async (user, token) => {
   try {
     const response = await fetch(`/api/users/update/${user.id}`, {
@@ -132,4 +130,27 @@ export const validateMessage = (message) => {
 export const sendMessage = (socket, roomId, message, username) => {
     socket.emit('message', { roomId, message, username });
     console.log('Sending message:', { roomId, message, username });
+};
+
+export const fetchMessages = async (room,page) => {
+  try {
+    const response = await fetch(`/api/users/rooms/${room?.name}/messages?page=${page}&limit=20`);
+
+    if (!response.ok) {
+      // Handle HTTP errors
+      console.error(`Failed to fetch messages: ${response.status} ${response.statusText}`);
+      showFeedback(`Error: Failed to fetch messages (${response.status})`, 'error');
+      return;
+    }
+    
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      console.error('Received non-JSON response');
+      return;
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching messages:', error);
+  }
 };
