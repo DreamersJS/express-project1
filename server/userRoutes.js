@@ -209,4 +209,44 @@ router.delete('/delete/:id', async (req, res) => {
   }
 });
 
+
+// Endpoint to get the list of rooms
+router.get('/rooms', async (req, res) => {
+  console.log('Rooms route hit');
+  try {
+    const [rows] = await db.query('SELECT * FROM rooms');
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching rooms:', error);
+    res.status(500).json({ message: 'Error fetching rooms' });
+  }
+});
+
+// Backend API route to GET messages from a specific room
+router.get('/rooms/:roomName/messages', async (req, res) => {
+  const { roomName } = req.params;
+  console.log({ roomName });
+      // Make sure `roomName` is a string and not an object
+    if (typeof roomName !== 'string') {
+      console.log('userRoutes.js: roomName must be a string');
+      throw new Error('Room name must be a string');
+    }
+  try {
+    const [roomRows] = await db.query('SELECT id FROM rooms WHERE name = ?', [roomName]);
+    const room = roomRows[0];
+console.log('Room:', room);
+    if (!room) {
+      return res.status(404).json({ message: 'Room not found' });
+    }
+
+    const [messageRows] = await db.query('SELECT username, message, sent_at FROM messages WHERE room_id = ? ORDER BY sent_at ASC', [room.id]);
+    res.json(messageRows);
+  } catch (error) {
+    console.error('Error retrieving messages:', error);
+    res.status(500).json({ message: 'Failed to retrieve messages' });
+  }
+});
+
+
+
 export default router;

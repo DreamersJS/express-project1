@@ -124,3 +124,12 @@ export const putUserDetails = async (user, token) => {
     throw error;
   }
 }
+
+export const validateMessage = (message) => {
+  return message && message.trim() !== '';
+};
+
+export const sendMessage = (socket, roomId, message, username) => {
+    socket.emit('message', { roomId, message, username });
+    console.log('Sending message:', { roomId, message, username });
+};

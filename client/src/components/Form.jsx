@@ -2,21 +2,24 @@ import { useRef, useState, useEffect, useContext } from 'react';
 import { AppContext } from '../AppContext';
 import io from 'socket.io-client';
 import './Form.css';
+import { validateMessage } from '../../service/service';
+import { useRoom } from '../customHooks/useRoom';
 
- const Form = ({ showFeedback }) => {
-  const [room, setRoom] = useState('');
-  const [activeRoom, setActiveRoom] = useState('');
-  const [joinedRooms, setJoinedRooms] = useState([]);
-  const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState([]);
-  const [showScrollButton, setShowScrollButton] = useState(false);
-
+const Form = ({ showFeedback }) => {
   const { user } = useContext(AppContext);
-
   const socketRef = useRef(null);
   const inputRef = useRef(null);
   const messagesEndRef = useRef(null);
   const messagesListRef = useRef(null);
+
+  const [newRoomName, setNewRoomName] = useState('');
+  const [message, setMessage] = useState('');
+  const [messages, setMessages] = useState([]);
+  const [showScrollButton, setShowScrollButton] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMoreMessages, setHasMoreMessages] = useState(true);
+
+  const { room, joinRoom } = useRoom(socketRef, showFeedback);
 
   useEffect(() => {
     const socketUrl = String(import.meta.env.VITE_SOCKET_URL);
@@ -42,10 +45,15 @@ import './Form.css';
     });
 
     socketRef.current.on('message', (data) => {
-      if (typeof data === 'object' && data.username && data.message) {
-        console.log('Received message:', data);
-        setMessages(prevMessages => [...prevMessages, data]);
-      } else {
+      try {
+        console.log('Message received from server:', data);
+        if (data && data.username && data.message) {
+          setMessages(prevMessages => [...prevMessages, data]);
+        } else {
+          console.error('Received unexpected message format:', data);
+          showFeedback('Error: Received invalid message format', 'error');
+        }
+      } catch (error) {
         console.error('Received invalid message data:', data);
         showFeedback('Error: Received invalid message data', 'error');
       }
@@ -61,7 +69,44 @@ import './Form.css';
   }, [user]);
 
   useEffect(() => {
+    const fetchMessages = async (page) => {
+      try {
+        const response = await fetch(`/api/users/rooms/${room?.name}/messages?page=${page}&limit=20`);
+    
+        if (!response.ok) {
+          // Handle HTTP errors
+          console.error(`Failed to fetch messages: ${response.status} ${response.statusText}`);
+          showFeedback(`Error: Failed to fetch messages (${response.status})`, 'error');
+          return;
+        }
+        console.log(`response: ${response}`);
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          console.error('Received non-JSON response');
+          showFeedback('Error: Received invalid response format', 'error');
+          return;
+        }
+    
+        const newMessages = await response.json();
+        console.log(`newMessages: ${newMessages}`);
+        if (newMessages.length < 20) {
+          setHasMoreMessages(false);
+        }
+        setMessages(prevMessages => [...prevMessages, ...newMessages]);
+      } catch (error) {
+        console.error('Error fetching messages:', error);
+        showFeedback('Error: Failed to fetch messages', 'error');
+      }
+    };
+    
 
+    if (room?.name) {
+      fetchMessages(currentPage);
+    }
+  }, [room?.name, currentPage]);
+
+  useEffect(() => {
     const isScrolledToBottom = () => {
       const messagesList = messagesListRef.current;
       return messagesList.scrollHeight - messagesList.clientHeight <= messagesList.scrollTop + 1;
@@ -81,62 +126,65 @@ import './Form.css';
 
   const handleJoinRoom = (e) => {
     e.preventDefault();
-
-    if (!room.trim()) {
-      showFeedback('Please enter a valid room name.', 'error');
-      console.log('Please enter a valid room name.');
-      return;
+    try {
+      if (newRoomName.trim()) {
+        joinRoom(newRoomName);
+        setNewRoomName('');
+        socketRef.current.emit('joinRoom', room);
+        showFeedback(`Joined room: ${room}`, 'info');
+      } else {
+        showFeedback('Please enter a valid room name.', 'error');
+      }
+    } catch (error) {
+      console.error('Error joining room:', error);
+      showFeedback('Error: Failed to join room', 'error');
     }
-
-    console.log(`Joining room: ${room}`);
-    showFeedback(`Joined room: ${room}`, 'info');
-    socketRef.current.emit('joinRoom', room);
-    setActiveRoom(room);
-    setRoom('');
-    setJoinedRooms(prevRooms => [...prevRooms, room]);
-  };
-
-  const validateMessage = (message) => {
-    return message && message.trim() !== '';
   };
 
   const handleSendMessage = (e) => {
     e.preventDefault();
-    if (validateMessage(message)) {
-      const payload = {
-        room: activeRoom || null,
-        message,
-        username: user?.username || 'Anonymous',
-      };
-      socketRef.current.emit('message', payload);
-      setMessage('');
+    try {
+      if (validateMessage(message)) {
+        const payload = {
+          roomId: room?.id || null,
+          roomName: room?.name || null,
+          message,
+          username: user?.username || 'Anonymous',
+        };
+        socketRef.current.emit('message', payload);
+        setMessage('');
+        inputRef.current.focus();
+      } else {
+        showFeedback('Please enter a valid message.', 'error');
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      showFeedback('Error: Failed to send message', 'error');
     }
-    inputRef.current.focus();
   };
 
   const handleInputChange = (e) => {
     setMessage(e.target.value);
-    if (e.target.value) {
-      socketRef.current.emit('typing');
-    } else {
-      socketRef.current.emit('stopTyping');
-    }
   };
 
-  const handleBlur = () => {
-    socketRef.current.emit('stopTyping');
+  const handleScroll = () => {
+    const messagesList = messagesListRef.current;
+    if (messagesList.scrollTop === 0 && hasMoreMessages) {
+      setCurrentPage(prevPage => prevPage + 1);
+    }
+    setShowScrollButton(messagesList.scrollTop < messagesList.scrollHeight - messagesList.clientHeight - 1);
   };
 
   return (
     <div className='container'>
-
+      {/* Join Room */}
       <div className="join-room">
         <form onSubmit={handleJoinRoom} className='chat-container'>
           <div className="chat-group">
             <input
               type="text"
-              value={room}
-              onChange={(e) => setRoom(e.target.value)}
+              value={newRoomName}
+              onChange={(e) => setNewRoomName(e.target.value)}
               placeholder="Enter room name"
             />
             <button type="submit">Join Room</button>
@@ -144,50 +192,31 @@ import './Form.css';
         </form>
       </div>
 
-      <>
-        {activeRoom && <h2>Messages in {activeRoom}</h2>}
-        <ul className='msg-display'
-          ref={messagesListRef}
-          onScroll={() => setShowScrollButton(messagesListRef.current.scrollTop < messagesListRef.current.scrollHeight - messagesListRef.current.clientHeight - 1)}
-        >
-          {messages.map((msg, index) => {
-            let className;
-            if (msg.username === user?.username) {
-              className = 'user';
-            } else if (msg.username === 'System') {
-              className = 'system';
-            } else {
-              className = 'other';
-            }
-            return (
-              <li
-                key={index}
-                className={className}
-              >
-                {/* {msg.username ? `${msg.username}: ${msg.message}` : msg.message} */}
-                {(typeof msg.username === 'string' ? msg.username : 'Unknown') + ': ' + (typeof msg.message === 'string' ? msg.message : 'Invalid message')}
-              </li>
-            );
-          })}
+      {/* Messages Display */}
+      {room.name && <h2>Messages in {room.name}</h2>}
+      <ul className='msg-display' ref={messagesListRef} onScroll={handleScroll}>
+        {messages.map((msg, index) => {
+          const className = msg.username === user?.username
+            ? 'user'
+            : msg.username === 'System'
+              ? 'system'
+              : 'other';
+          return (
+            <li key={index} className={className}>
+              {(typeof msg.username === 'string' ? msg.username : 'Unknown') + ': ' + (typeof msg.message === 'string' ? msg.message : 'Invalid message')}
+            </li>
+          );
+        })}
+        <div ref={messagesEndRef} />
+      </ul>
 
-          {/* This div is used to scroll into view */}
-          <div ref={messagesEndRef} />
-        </ul>
+      {showScrollButton && (
+        <p className='scroll-to-bottom'>
+          <button onClick={scrollToBottom}>Scroll to Latest</button>
+        </p>
+      )}
 
-        {showScrollButton && (
-          <>
-          <p className='scroll-to-bottom'>
-          <button  onClick={scrollToBottom}>
-            Scroll to Latest
-          </button>
-          </p>
-          </>
-        )}
-        {/* <p className="activity">
-          {typingUsers.length > 0 ? `${typingUsers.join(', ')} ${typingUsers.length > 1 ? 'are' : 'is'} typing...` : ''}
-        </p> */}
-      </>
-
+      {/* Message Input */}
       <div className="msg-input">
         <form onSubmit={handleSendMessage} className='chat-container'>
           <div className="chat-group">
@@ -195,7 +224,6 @@ import './Form.css';
               type="text"
               value={message}
               onChange={handleInputChange}
-              onBlur={handleBlur}
               placeholder="Enter message"
               ref={inputRef}
             />
@@ -203,7 +231,6 @@ import './Form.css';
           </div>
         </form>
       </div>
-
     </div>
   );
 };
