@@ -222,15 +222,19 @@ router.get('/rooms', async (req, res) => {
   }
 });
 
-// API route to GET Messages form a specific room
+// Backend API route to GET messages from a specific room
 router.get('/rooms/:roomName/messages', async (req, res) => {
-  console.log('Messages form a specific room route hit');
   const { roomName } = req.params;
-
+  console.log({ roomName });
+      // Make sure `roomName` is a string and not an object
+    if (typeof roomName !== 'string') {
+      console.log('userRoutes.js: roomName must be a string');
+      throw new Error('Room name must be a string');
+    }
   try {
     const [roomRows] = await db.query('SELECT id FROM rooms WHERE name = ?', [roomName]);
     const room = roomRows[0];
-
+console.log('Room:', room);
     if (!room) {
       return res.status(404).json({ message: 'Room not found' });
     }
@@ -242,6 +246,7 @@ router.get('/rooms/:roomName/messages', async (req, res) => {
     res.status(500).json({ message: 'Failed to retrieve messages' });
   }
 });
+
 
 
 export default router;

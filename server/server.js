@@ -75,6 +75,11 @@ try {
       try {
           console.log(`Socket ${socket.id} attempting to join room: ${roomName}`);
 
+              // Make sure `roomName` is a string and not an object
+    if (typeof roomName !== 'string') {
+      console.log('server.js joinRoom: roomName must be a string');
+      throw new Error('Room name must be a string');
+    }
           // Check if the room already exists
           const [existingRooms] = await db.query('SELECT id FROM rooms WHERE name = ?', [roomName]);
           let roomId;
