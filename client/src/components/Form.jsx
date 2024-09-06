@@ -130,8 +130,8 @@ const Form = ({ showFeedback }) => {
       if (newRoomName.trim()) {
         joinRoom(newRoomName);
         setNewRoomName('');
-        socketRef.current.emit('joinRoom', room);
-        showFeedback(`Joined room: ${room}`, 'info');
+        socketRef.current.emit('joinRoom', newRoomName);
+        showFeedback(`Joined room: ${newRoomName}`, 'info');
       } else {
         showFeedback('Please enter a valid room name.', 'error');
       }
