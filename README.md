@@ -23,47 +23,35 @@ Chat App with Socket.io is a dynamic, real-time messaging platform designed to f
    
 - Users can join different chat rooms and send messages within them.
 - The application supports multiple rooms with real-time updates and notifications.
-  
-<!-- 4. Typing Indicators:
-   
-- The application shows typing indicators to let users know when someone is typing a message. -->
-  
+ 
 4. Feedback System:
    
-- Provides visual feedback for various actions (e.g., joining a room, sending a message, or logging out).
+- Provides visual feedback for various actions (e.g., joining a room, errors, or logging out).
   
 5. UpdateUser Component:
    
-- Allows users to update their profile information.
-- Before making an update request, the component checks if any changes were made compared to the initial user data. 
+- Allows profile updates with checks for changes before submission. 
   
-6. Suspense and lazy 
+6. Code Splitting with Suspense and Lazy: 
    
-- In React, Suspense and lazy are tools that enable you to improve the loading experience for users.
+- Enhances user experience by improving load times using React's Suspense and lazy.
   
-7. rooms and messages are stored in MySQL now
-- Not knowing about the foreign key importance, made me adding console.log-s, debug over and over again for hours, finally found some info in w3schools:
-
-```
-ALTER TABLE Orders
-ADD CONSTRAINT FK_PersonOrder
-FOREIGN KEY (PersonID) REFERENCES Persons(PersonID);
-```
-(this is an example)
+7. Database Management:
+- Rooms and messages are now stored in MySQL.
 
 
 ### Technologies used
 
 
-- **JavaScript**
-- **React**: For building the user interface, managing state, and handling component lifecycle.
-- **Vite**:  For fast development and build tooling.
-- **HTML & CSS**: For structuring and styling the application.
+- **JavaScript**: Core programming language.
+- **React**:  For building the user interface.
+- **Vite**:  Fast development tooling.
+- **HTML & CSS**: For structuring and styling.
 - **Express.js**:  For server-side logic and API handling.
-- **Socket.io**: For real-time, bidirectional communication between clients and server.
+- **Socket.io**: For real-time communication.
 - **Bcrypt**: For hashing passwords.
 - **MySQL**: For database management.
-- **ViteProxy**: To avoid CORS issues entirely during development by making it seem like the frontend and backend are served from the same origin.
+- **ViteProxy**: To avoid CORS issues during development.
 - **CORS**: For production ensures that only allowed origins can access your API.
 - **jsonwebtoken**: For managing user authentication tokens.
 - **git**: For version control.
@@ -82,6 +70,7 @@ To install dependencies for both the client and server, run the following comman
 npm install
 ```
 ### Add .env file in client folder looking like:
+ add the .env files to .gitignore to avoid committing sensitive information.
 
 ```
 VITE_SOCKET_URL=http://localhost:3000
