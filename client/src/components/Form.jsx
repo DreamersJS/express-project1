@@ -1,6 +1,5 @@
 import { useRef, useState, useEffect, useContext } from 'react';
 import { AppContext } from '../AppContext';
-import io from 'socket.io-client';
 import './Form.css';
 import { useRoom } from '../customHooks/useRoom';
 import { useMessages } from '../customHooks/useMessages';

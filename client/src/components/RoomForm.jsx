@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useRoom } from '../customHooks/useRoom';
 
 const RoomForm = ({ joinRoom, currentRoomName, showFeedback }) => {
   const [newRoomName, setNewRoomName] = useState('');

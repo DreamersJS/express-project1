@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { fetchMessages, validateMessage } from '../../service/service';
 
 export const useMessages = (socketRef, room, currentPage, setHasMoreMessages, showFeedback) => {
-  const [messages, setMessages] = useState([]);  // Initialize as an empty array
+  const [messages, setMessages] = useState([]);  
 
   const loadMessages = useCallback(async () => {
     if (room?.name) {
