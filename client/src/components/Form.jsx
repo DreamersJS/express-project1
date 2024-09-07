@@ -1,6 +1,5 @@
 import { useRef, useState, useEffect, useContext } from 'react';
 import { AppContext } from '../AppContext';
-import io from 'socket.io-client';
 import './Form.css';
 import { useRoom } from '../customHooks/useRoom';
 import { useMessages } from '../customHooks/useMessages';
@@ -70,15 +69,6 @@ const Form = ({ showFeedback }) => {
     setMessage(e.target.value);
   };
 
-  useEffect(() => {
-    if (messages.length) {
-
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100); 
-    }
-  }, [messages]);
-  
 
   return (
     <div className='container'>

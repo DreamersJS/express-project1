@@ -67,7 +67,7 @@ import { fetchUserDetails, verifyToken, putUserDetails } from '../../service/ser
     if (JSON.stringify(localUser) === JSON.stringify(initialUser)) {
       console.log('No changes detected');
       showFeedback(`No changes detected`, 'info');
-      return; // Do not update if no changes
+      return;
     }
 
     try {
@@ -77,7 +77,7 @@ import { fetchUserDetails, verifyToken, putUserDetails } from '../../service/ser
         await putUserDetails({ ...localUser, id }, token);
         console.log('User updated successfully');
         showFeedback(`User updated successfully`, 'info');
-        // Optionally, update initialUser to reflect the latest changes
+        // update initialUser to reflect the latest changes
         setInitialUser(localUser);
       } else {
         console.error('Token is invalid or expired');
