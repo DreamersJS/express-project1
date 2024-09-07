@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
  * 
  * @param {*} socket socketRef
  * @param {*} showFeedback showFeedback
- * @returns {room, joinRoom } room state and the joinRoom function
+ * @returns {Object} An object containing the current room state and the joinRoom function.
  */
 export const useRoom = (socket, showFeedback) => {
   const [room, setRoom] = useState({ id: null, name: '' });
@@ -33,19 +33,19 @@ export const useRoom = (socket, showFeedback) => {
    */
   const joinRoom = (newRoomName) => {
     try {
-    if (socket.current && newRoomName !== room.name) {
-      if (room.id) {
-        // Leave the current room
-        socket.current.emit('leaveRoom', room.id);
+      if (socket.current && newRoomName !== room.name) {
+        if (room.id) {
+          // Leave the current room
+          socket.current.emit('leaveRoom', room.id);
+        }
+        // Join the new room
+        socket.current.emit('joinRoom', newRoomName);
+        console.log(`Joining room: ${newRoomName} with socket ID: ${socket.id}`);
       }
-      // Join the new room
-      socket.current.emit('joinRoom', newRoomName);
-      console.log(`Joining room: ${newRoomName} with socket ID: ${socket.id}`);
-    }
-  } catch (error) {
+    } catch (error) {
       console.error('Error creating/joining room:', error);
       socket.emit('error', { message: 'Failed to join room' });
-  }
+    }
   };
 
   return { room, joinRoom }; // Return the room state and the joinRoom function
