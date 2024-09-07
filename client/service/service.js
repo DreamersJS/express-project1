@@ -132,24 +132,29 @@ export const sendMessage = (socket, roomId, message, username) => {
     console.log('Sending message:', { roomId, message, username });
 };
 
-export const fetchMessages = async (room,page) => {
+export const fetchMessages = async (roomName, page, showFeedback) => {
   try {
-    const response = await fetch(`/api/users/rooms/${room?.name}/messages?page=${page}&limit=20`);
+    const response = await fetch(`/api/users/rooms/${roomName}/messages?page=${page}&limit=20`);
 
     if (!response.ok) {
-      // Handle HTTP errors
       console.error(`Failed to fetch messages: ${response.status} ${response.statusText}`);
-      return;
+      showFeedback(`Error: Failed to fetch messages (${response.status})`, 'error');
+      return null; // Indicate error
     }
-    
+
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
       console.error('Received non-JSON response');
-      return;
+      showFeedback('Error: Received invalid response format', 'error');
+      return null; // Indicate error
     }
 
-    return await response.json();
+    const newMessages = await response.json();
+    return newMessages;
   } catch (error) {
     console.error('Error fetching messages:', error);
+    showFeedback('Error: Failed to fetch messages', 'error');
+    return null; // Indicate error
   }
 };
+
