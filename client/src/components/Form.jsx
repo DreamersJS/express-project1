@@ -2,7 +2,6 @@ import { useRef, useState, useEffect, useContext } from 'react';
 import { AppContext } from '../AppContext';
 import io from 'socket.io-client';
 import './Form.css';
-import { validateMessage, fetchMessages } from '../../service/service';
 import { useRoom } from '../customHooks/useRoom';
 import { useMessages } from '../customHooks/useMessages';
 import { useSocketConnection } from '../customHooks/useSocketConnection';
@@ -69,22 +68,6 @@ const Form = ({ showFeedback }) => {
     }
   }, [room, currentPage]);
 
-  const handleJoinRoom = (e) => {
-    e.preventDefault();
-    try {
-      if (newRoomName.trim()) {
-        joinRoom(newRoomName);
-        setNewRoomName('');
-        showFeedback(`Joined room: ${newRoomName}`, 'info');
-      } else {
-        showFeedback('Please enter a valid room name.', 'error');
-      }
-    } catch (error) {
-      console.error('Error joining room:', error);
-      showFeedback('Error: Failed to join room', 'error');
-    }
-  };
-
   const handleSendMessage = (e) => {
     e.preventDefault();
     if (message.trim()) {
@@ -118,19 +101,7 @@ const Form = ({ showFeedback }) => {
   return (
     <div className='container'>
       {/* Join Room */}
-      <div className="join-room">
-        <form onSubmit={handleJoinRoom} className='chat-container'>
-          <div className="chat-group">
-            <input
-              type="text"
-              value={newRoomName}
-              onChange={(e) => setNewRoomName(e.target.value)}
-              placeholder="Enter room name"
-            />
-            <button type="submit">Join Room</button>
-          </div>
-        </form>
-      </div>
+      <RoomForm joinRoom={joinRoom} currentRoomName={room.name} showFeedback={showFeedback} />
 
       {/* Messages Display */}
       {room.name && <h3>Messages in {room.name}</h3>}

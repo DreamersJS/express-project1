@@ -1,25 +1,25 @@
 import React, { useState } from 'react';
 import { useRoom } from '../customHooks/useRoom';
 
-const RoomForm = ({ room, joinRoom, showFeedback }) => {
+const RoomForm = ({ joinRoom, currentRoomName, showFeedback }) => {
   const [newRoomName, setNewRoomName] = useState('');
-  // const { room, joinRoom } = useRoom(socketRef, showFeedback);
 
   const handleJoinRoom = (e) => {
     e.preventDefault();
-    try {
-      if (newRoomName.trim()) {
+
+    if (newRoomName.trim()) {
+      if (newRoomName !== currentRoomName) {
         joinRoom(newRoomName);
         setNewRoomName('');
-        showFeedback(`Joined room: ${newRoomName}`, 'info');
+        showFeedback(`Attempting to join room: ${newRoomName}`, 'info');
       } else {
-        showFeedback('Please enter a valid room name.', 'error');
+        showFeedback('You are already in this room.', 'error');
       }
-    } catch (error) {
-      console.error('Error joining room:', error);
-      showFeedback('Error: Failed to join room', 'error');
+    } else {
+      showFeedback('Please enter a valid room name.', 'error');
     }
   };
+
 
   return (
     <div className="join-room">
