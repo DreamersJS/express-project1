@@ -2,7 +2,7 @@ import { useRef, useState, useEffect, useContext } from 'react';
 import { AppContext } from '../AppContext';
 import io from 'socket.io-client';
 import './Form.css';
-import { validateMessage } from '../../service/service';
+import { validateMessage,sendMessage, fetchMessages } from '../../service/service';
 import { useRoom } from '../customHooks/useRoom';
 
 const Form = ({ showFeedback }) => {
@@ -69,42 +69,22 @@ const Form = ({ showFeedback }) => {
   }, [user]);
 
   useEffect(() => {
-    const fetchMessages = async (page) => {
-      try {
-        const response = await fetch(`/api/users/rooms/${room?.name}/messages?page=${page}&limit=20`);
-    
-        if (!response.ok) {
-          // Handle HTTP errors
-          console.error(`Failed to fetch messages: ${response.status} ${response.statusText}`);
-          showFeedback(`Error: Failed to fetch messages (${response.status})`, 'error');
-          return;
+    const fetchMessagesFromRoom = async () => {
+      if (room?.name) {
+        const newMessages = await fetchMessages(room.name, currentPage, showFeedback);
+
+        if (newMessages) {
+          if (newMessages.length < 20) {
+            setHasMoreMessages(false);
+          }
+          setMessages(prevMessages => [...prevMessages, ...newMessages]);
         }
-        console.log(`response: ${response}`);
-        
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          console.error('Received non-JSON response');
-          showFeedback('Error: Received invalid response format', 'error');
-          return;
-        }
-    
-        const newMessages = await response.json();
-        console.log(`newMessages: ${newMessages}`);
-        if (newMessages.length < 20) {
-          setHasMoreMessages(false);
-        }
-        setMessages(prevMessages => [...prevMessages, ...newMessages]);
-      } catch (error) {
-        console.error('Error fetching messages:', error);
-        showFeedback('Error: Failed to fetch messages', 'error');
       }
     };
-    
 
-    if (room?.name) {
-      fetchMessages(currentPage);
-    }
+    fetchMessagesFromRoom();
   }, [room?.name, currentPage]);
+
 
   useEffect(() => {
     const isScrolledToBottom = () => {
@@ -143,19 +123,13 @@ const Form = ({ showFeedback }) => {
   const handleSendMessage = (e) => {
     e.preventDefault();
     try {
-      if (validateMessage(message)) {
-        const payload = {
-          roomId: room?.id || null,
-          roomName: room?.name || null,
-          message,
-          username: user?.username || 'Anonymous',
-        };
-        socketRef.current.emit('message', payload);
+      if (!validateMessage(message)) {
+        showFeedback('Please enter a valid message.', 'error');
+        return;
+      }
+        sendMessage(socketRef.current, room.id || null, message, user.username);
         setMessage('');
         inputRef.current.focus();
-      } else {
-        showFeedback('Please enter a valid message.', 'error');
-      }
     } catch (error) {
       console.error('Error sending message:', error);
       showFeedback('Error: Failed to send message', 'error');
