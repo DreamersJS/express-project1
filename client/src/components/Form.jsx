@@ -2,8 +2,13 @@ import { useRef, useState, useEffect, useContext } from 'react';
 import { AppContext } from '../AppContext';
 import io from 'socket.io-client';
 import './Form.css';
-import { validateMessage,sendMessage, fetchMessages } from '../../service/service';
+import { validateMessage, fetchMessages } from '../../service/service';
 import { useRoom } from '../customHooks/useRoom';
+import { useMessages } from '../customHooks/useMessages';
+import { useSocketConnection } from '../customHooks/useSocketConnection';
+import RoomForm from './RoomForm';
+import ScrollButton from './ScrollButton';
+import DisplayMessages from './DisplayMessages';
 
 const Form = ({ showFeedback }) => {
   const { user } = useContext(AppContext);
@@ -14,7 +19,6 @@ const Form = ({ showFeedback }) => {
 
   const [newRoomName, setNewRoomName] = useState('');
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState([]);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
@@ -22,7 +26,8 @@ const Form = ({ showFeedback }) => {
   const { room, joinRoom } = useRoom(socketRef, showFeedback);
 
   useEffect(() => {
-    const socketUrl = String(import.meta.env.VITE_SOCKET_URL);
+
+    const socketUrl = import.meta.env.VITE_SOCKET_URL;
 
     if (!socketUrl) {
       console.error('Socket URL is undefined');
@@ -30,9 +35,10 @@ const Form = ({ showFeedback }) => {
       return;
     }
 
-    socketRef.current = io(`${socketUrl}/chat`, {
-      transports: ['websocket'],
-      query: { username: user?.username || 'Anonymous' }
+    socketRef.current = io(`${socketUrl}/chat`, { transports: ['websocket'], query: { username: user?.username } });
+
+    socketRef.current.on('connect', () => {
+      console.log(`Connected to /chat with ID: ${socketRef.current.id}`);
     });
 
     socketRef.current.on('connect_error', (err) => {
@@ -40,69 +46,28 @@ const Form = ({ showFeedback }) => {
       showFeedback('Error: Connection failed', 'error');
     });
 
-    socketRef.current.on('connect', () => {
-      console.log(`Connected to namespace /chat with ID: ${socketRef.current.id}`);
-    });
-
-    socketRef.current.on('message', (data) => {
-      try {
-        console.log('Message received from server:', data);
-        if (data && data.username && data.message) {
-          setMessages(prevMessages => [...prevMessages, data]);
-        } else {
-          console.error('Received unexpected message format:', data);
-          showFeedback('Error: Received invalid message format', 'error');
-        }
-      } catch (error) {
-        console.error('Received invalid message data:', data);
-        showFeedback('Error: Received invalid message data', 'error');
-      }
-    });
-
     return () => {
       if (socketRef.current) {
-        socketRef.current.off('message');
         socketRef.current.disconnect();
         console.log('Socket.IO Client disconnected');
       }
     };
-  }, [user]);
+  }, [user,]);
+
+  // Handle messages with useMessages hook
+  const { sendMessage, messages, loadMessages } = useMessages(
+    socketRef,
+    room,
+    currentPage,
+    setHasMoreMessages,
+    showFeedback
+  );
 
   useEffect(() => {
-    const fetchMessagesFromRoom = async () => {
-      if (room?.name) {
-        const newMessages = await fetchMessages(room.name, currentPage, showFeedback);
-
-        if (newMessages) {
-          if (newMessages.length < 20) {
-            setHasMoreMessages(false);
-          }
-          setMessages(prevMessages => [...prevMessages, ...newMessages]);
-        }
-      }
-    };
-
-    fetchMessagesFromRoom();
-  }, [room?.name, currentPage]);
-
-
-  useEffect(() => {
-    const isScrolledToBottom = () => {
-      const messagesList = messagesListRef.current;
-      return messagesList.scrollHeight - messagesList.clientHeight <= messagesList.scrollTop + 1;
-    };
-
-    if (isScrolledToBottom()) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    } else {
-      setShowScrollButton(true);
+    if (room.name) {
+      loadMessages();
     }
-  }, [messages]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    setShowScrollButton(false);
-  };
+  }, [room, currentPage]);
 
   const handleJoinRoom = (e) => {
     e.preventDefault();
@@ -122,31 +87,33 @@ const Form = ({ showFeedback }) => {
 
   const handleSendMessage = (e) => {
     e.preventDefault();
-    try {
-      if (!validateMessage(message)) {
-        showFeedback('Please enter a valid message.', 'error');
-        return;
-      }
-        sendMessage(socketRef.current, room.id || null, message, user.username);
-        setMessage('');
-        inputRef.current.focus();
-    } catch (error) {
-      console.error('Error sending message:', error);
-      showFeedback('Error: Failed to send message', 'error');
-    }
-  };
+    if (message.trim()) {
+      sendMessage(message, user?.username);
 
-  const handleInputChange = (e) => {
-    setMessage(e.target.value);
+      setMessage('');
+    } else {
+      showFeedback('Please enter a valid message.', 'error');
+    }
   };
 
   const handleScroll = () => {
     const messagesList = messagesListRef.current;
     if (messagesList.scrollTop === 0 && hasMoreMessages) {
-      setCurrentPage(prevPage => prevPage + 1);
+      setCurrentPage((prevPage) => prevPage + 1);
     }
-    setShowScrollButton(messagesList.scrollTop < messagesList.scrollHeight - messagesList.clientHeight - 1);
+    setShowScrollButton(
+      messagesList.scrollTop < messagesList.scrollHeight - messagesList.clientHeight - 1
+    );
   };
+  const handleInputChange = (e) => {
+    setMessage(e.target.value);
+  };
+
+  useEffect(() => {
+    if (messages.length) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
 
   return (
     <div className='container'>
@@ -166,28 +133,15 @@ const Form = ({ showFeedback }) => {
       </div>
 
       {/* Messages Display */}
-      {room.name && <h2>Messages in {room.name}</h2>}
-      <ul className='msg-display' ref={messagesListRef} onScroll={handleScroll}>
-        {messages.map((msg, index) => {
-          const className = msg.username === user?.username
-            ? 'user'
-            : msg.username === 'System'
-              ? 'system'
-              : 'other';
-          return (
-            <li key={index} className={className}>
-              {(typeof msg.username === 'string' ? msg.username : 'Unknown') + ': ' + (typeof msg.message === 'string' ? msg.message : 'Invalid message')}
-            </li>
-          );
-        })}
-        <div ref={messagesEndRef} />
-      </ul>
-
-      {showScrollButton && (
-        <p className='scroll-to-bottom'>
-          <button onClick={scrollToBottom}>Scroll to Latest</button>
-        </p>
-      )}
+      {room.name && <h3>Messages in {room.name}</h3>}
+      <DisplayMessages
+        user={user}
+        messages={messages}
+        messagesListRef={messagesListRef}
+        messagesEndRef={messagesEndRef}
+        handleScroll={handleScroll}
+      />
+      <ScrollButton show={showScrollButton} scrollToBottom={() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })} />
 
       {/* Message Input */}
       <div className="msg-input">
