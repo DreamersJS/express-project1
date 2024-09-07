@@ -70,15 +70,6 @@ const Form = ({ showFeedback }) => {
     setMessage(e.target.value);
   };
 
-  useEffect(() => {
-    if (messages.length) {
-
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100); 
-    }
-  }, [messages]);
-  
 
   return (
     <div className='container'>

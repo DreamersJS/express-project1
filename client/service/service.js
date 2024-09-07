@@ -127,11 +127,6 @@ export const validateMessage = (message) => {
   return message && message.trim() !== '';
 };
 
-export const sendMessage = (socket, roomId, message, username) => {
-    socket.emit('message', { roomId, message, username });
-    console.log('Sending message:', { roomId, message, username });
-};
-
 export const fetchMessages = async (roomName, page, showFeedback) => {
   try {
     const response = await fetch(`/api/users/rooms/${roomName}/messages?page=${page}&limit=20`);
@@ -139,14 +134,14 @@ export const fetchMessages = async (roomName, page, showFeedback) => {
     if (!response.ok) {
       console.error(`Failed to fetch messages: ${response.status} ${response.statusText}`);
       showFeedback(`Error: Failed to fetch messages (${response.status})`, 'error');
-      return null; // Indicate error
+      return;
     }
 
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
       console.error('Received non-JSON response');
       showFeedback('Error: Received invalid response format', 'error');
-      return null; // Indicate error
+      return; 
     }
 
     const newMessages = await response.json();
@@ -154,7 +149,7 @@ export const fetchMessages = async (roomName, page, showFeedback) => {
   } catch (error) {
     console.error('Error fetching messages:', error);
     showFeedback('Error: Failed to fetch messages', 'error');
-    return null; // Indicate error
+    return;
   }
 };
 
