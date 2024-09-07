@@ -11,47 +11,25 @@ import DisplayMessages from './DisplayMessages';
 
 const Form = ({ showFeedback }) => {
   const { user } = useContext(AppContext);
-  const socketRef = useRef(null);
   const inputRef = useRef(null);
   const messagesEndRef = useRef(null);
   const messagesListRef = useRef(null);
 
-  const [newRoomName, setNewRoomName] = useState('');
   const [message, setMessage] = useState('');
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
 
+  const socketUrl = import.meta.env.VITE_SOCKET_URL;
+  
+  if (!socketUrl) {
+    console.error('Socket URL is undefined');
+    showFeedback('Error: Socket URL is undefined', 'error');
+    return;
+  }
+  
+  const socketRef = useSocketConnection(socketUrl, user, showFeedback);
   const { room, joinRoom } = useRoom(socketRef, showFeedback);
-
-  useEffect(() => {
-
-    const socketUrl = import.meta.env.VITE_SOCKET_URL;
-
-    if (!socketUrl) {
-      console.error('Socket URL is undefined');
-      showFeedback('Error: Socket URL is undefined', 'error');
-      return;
-    }
-
-    socketRef.current = io(`${socketUrl}/chat`, { transports: ['websocket'], query: { username: user?.username } });
-
-    socketRef.current.on('connect', () => {
-      console.log(`Connected to /chat with ID: ${socketRef.current.id}`);
-    });
-
-    socketRef.current.on('connect_error', (err) => {
-      console.error('Socket.IO connection error:', err);
-      showFeedback('Error: Connection failed', 'error');
-    });
-
-    return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-        console.log('Socket.IO Client disconnected');
-      }
-    };
-  }, [user,]);
 
   // Handle messages with useMessages hook
   const { sendMessage, messages, loadMessages } = useMessages(
