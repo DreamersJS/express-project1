@@ -139,7 +139,6 @@ export const fetchMessages = async (room,page) => {
     if (!response.ok) {
       // Handle HTTP errors
       console.error(`Failed to fetch messages: ${response.status} ${response.statusText}`);
-      showFeedback(`Error: Failed to fetch messages (${response.status})`, 'error');
       return;
     }
     
