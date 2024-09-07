@@ -120,24 +120,16 @@ const Form = ({ showFeedback }) => {
     }
   };
 
-  // sendMessage(socketRef.current, payload.roomId, payload.message, payload.username)
   const handleSendMessage = (e) => {
     e.preventDefault();
     try {
-      if (validateMessage(message)) {
-        const payload = {
-          roomId: room?.id || null,
-          roomName: room?.name || null,
-          message,
-          username: user?.username || 'Anonymous',
-        };
-        // sendMessage(socketRef.current, payload.roomId, payload.message, payload.username);
-        socketRef.current.emit('message', payload);
+      if (!validateMessage(message)) {
+        showFeedback('Please enter a valid message.', 'error');
+        return;
+      }
+        sendMessage(socketRef.current, room.id || null, message, user.username);
         setMessage('');
         inputRef.current.focus();
-      } else {
-        showFeedback('Please enter a valid message.', 'error');
-      }
     } catch (error) {
       console.error('Error sending message:', error);
       showFeedback('Error: Failed to send message', 'error');
