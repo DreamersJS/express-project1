@@ -153,3 +153,37 @@ export const fetchMessages = async (roomName, page, showFeedback) => {
   }
 };
 
+const deleteMessageById = async (msgId) => {
+  try {
+    const response = await fetch(`/api/messages/${msgId}`, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+
+  } catch (error) {
+    console.error('Error deleting message:', error);
+  }
+};
+
+const editMessageById = async (msgId, newMessage) => {
+  try {
+    if (newMessage.trim()) {
+      const response = await fetch(`/api/messages/${msgId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: newMessage }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.statusText}`);
+      }
+    }
+  } catch (error) {
+    console.error('Error editing message:', error);
+  }
+};

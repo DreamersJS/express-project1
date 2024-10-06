@@ -226,7 +226,6 @@ router.get('/rooms', async (req, res) => {
 router.get('/rooms/:roomName/messages', async (req, res) => {
   const { roomName } = req.params;
 
-  // Make sure `roomName` is a string and not an object
   if (typeof roomName !== 'string') {
     console.log('userRoutes.js: roomName must be a string');
     throw new Error('Room name must be a string');
@@ -247,6 +246,46 @@ router.get('/rooms/:roomName/messages', async (req, res) => {
   }
 });
 
+// Edit a message
+router.put('/messages/:id', async (req, res) => {
+  const messageId = req.params.id;
+  const { message } = req.body;
+
+  if (!message) {
+    return res.status(400).json({ message: 'Message content is required' });
+  }
+
+  try {
+    const [result] = await db.query('UPDATE messages SET message = ? WHERE id = ?', [message, messageId]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Message not found' });
+    }
+
+    res.status(200).json({ message: 'Message updated successfully' });
+  } catch (error) {
+    console.error('Error updating message:', error);
+    res.status(500).json({ message: 'Error updating message', error });
+  }
+});
+
+// Delete a message
+router.delete('/messages/:id', async (req, res) => {
+  const messageId = req.params.id;
+
+  try {
+    const [result] = await db.query('DELETE FROM messages WHERE id = ?', [messageId]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Message not found' });
+    }
+
+    res.status(200).json({ message: 'Message deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting message:', error);
+    res.status(500).json({ message: 'Error deleting message', error });
+  }
+});
 
 
 export default router;

@@ -1,8 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { fetchMessages, validateMessage } from '../../service/service';
+import { fetchMessages, validateMessage, editMessageById, deleteMessageById } from '../../service/service';
 
 export const useMessages = (socketRef, room, currentPage, setHasMoreMessages, showFeedback) => {
-  const [messages, setMessages] = useState([]);  
+  const [messages, setMessages] = useState([]);
+  const [editMessageId, setEditMessageId] = useState(null);
+  const [editMessage, setEditMessage] = useState('');
+  // const [isEditing, setIsEditing] = useState(false);
 
   const loadMessages = useCallback(async () => {
     if (room?.name) {
@@ -58,6 +61,26 @@ export const useMessages = (socketRef, room, currentPage, setHasMoreMessages, sh
       showFeedback('Invalid message format', 'error');
     }
   }, [socketRef, room]);
+
+  const handleEditMessage = useCallback((messageId, message) => {
+    if (validateMessage(message)) {
+      if (socketRef.current) {
+        editMessageById(messageId, message);
+      }
+    } else {
+      showFeedback('Invalid message format', 'error');
+    }
+  }, [socketRef, room]);
+
+  const handleCancelEdit = () => {
+    setEditMessageId(null);
+    setEditMessage('');
+  };
+
+  const handleDeleteMessage = useCallback((messageId) => {
+    deleteMessageById(messageId);
+  }, []);
+
 
   return { sendMessage, loadMessages, messages, hasMoreMessages: true };
 };
