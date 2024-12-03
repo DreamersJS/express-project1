@@ -153,7 +153,7 @@ export const fetchMessages = async (roomName, page, showFeedback) => {
   }
 };
 
-const deleteMessageById = async (msgId) => {
+export const deleteMessageById = async (msgId) => {
   try {
     const response = await fetch(`/api/messages/${msgId}`, {
       method: 'DELETE',
@@ -168,7 +168,7 @@ const deleteMessageById = async (msgId) => {
   }
 };
 
-const editMessageById = async (msgId, newMessage) => {
+export const editMessageById = async (msgId, newMessage) => {
   try {
     if (newMessage.trim()) {
       const response = await fetch(`/api/messages/${msgId}`, {
