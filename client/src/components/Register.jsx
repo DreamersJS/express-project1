@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { validateForm, registerUser } from '../../service/service.js';
 import { AppContext } from '../AppContext.jsx';
-import './Register.css'; 
+import './Form.css'; 
 
  const Register = ({ showFeedback }) => {
   const [username, setUsername] = useState('');
