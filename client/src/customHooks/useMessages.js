@@ -5,31 +5,50 @@ export const useMessages = (socketRef, room, currentPage, setHasMoreMessages, sh
   const [messages, setMessages] = useState([]);
   const [editMessageId, setEditMessageId] = useState(null);
   const [editMessage, setEditMessage] = useState('');
-  // const [isEditing, setIsEditing] = useState(false);
+  // const [isEditing, setIsEditing] = useState(null);
 
   const loadMessages = useCallback(async () => {
     if (room?.name) {
       try {
-        const fetchedMessages = await fetchMessages(room.name, currentPage, showFeedback);
+        const fetchedMessages = await fetchMessages(room.name, currentPage);
         if (fetchedMessages) {
           if (fetchedMessages.length < 20) {
             setHasMoreMessages(false);
           }
-          setMessages(prevMessages => Array.isArray(prevMessages)
-            ? [...prevMessages, ...fetchedMessages]
-            : fetchedMessages
-          );
+
+          // Combine fetched messages with existing messages, avoiding duplicates
+          setMessages((prevMessages) => {
+            const combined = [...prevMessages, ...fetchedMessages];
+            const uniqueMessages = combined.filter(
+              (message, index, self) =>
+                index === self.findIndex((m) => m.id === message.id)
+            );
+            return uniqueMessages;
+          });
+
+          // Append new messages to the existing messages
+          // setMessages(prevMessages => Array.isArray(prevMessages)
+          //   ? [...prevMessages, ...fetchedMessages]
+          //   : fetchedMessages
+          // );
+
         }
       } catch (error) {
         console.error('Error fetching messages:', error);
         showFeedback('Error: Failed to fetch messages', 'error');
       }
     }
-  }, [room, currentPage, setHasMoreMessages, showFeedback]);
+  }, [room, currentPage, setHasMoreMessages]);
 
+  // useEffect(() => {
+  //   loadMessages();
+  // }, [loadMessages]);
+
+  // Reset messages when room changes
   useEffect(() => {
-    loadMessages();
-  }, [loadMessages]);
+    setMessages([]); // Clear messages when room changes
+    loadMessages(); // Reload messages for the new room
+  }, [room, loadMessages]);
 
   useEffect(() => {
     const handleIncomingMessages = (data) => {
@@ -37,7 +56,6 @@ export const useMessages = (socketRef, room, currentPage, setHasMoreMessages, sh
         setMessages(prevMessages => Array.isArray(prevMessages) ? [...prevMessages, data] : [data]);
       } else {
         console.error('Received unexpected message format:', data);
-        showFeedback('Error: Received invalid message format', 'error');
       }
     };
 
@@ -50,7 +68,7 @@ export const useMessages = (socketRef, room, currentPage, setHasMoreMessages, sh
         socketRef.current.off('message', handleIncomingMessages);
       }
     };
-  }, [socketRef, showFeedback]);
+  }, [socketRef]);
 
   const sendMessage = useCallback((message, username) => {
     if (validateMessage(message)) {
@@ -58,7 +76,7 @@ export const useMessages = (socketRef, room, currentPage, setHasMoreMessages, sh
         socketRef.current.emit('message', { roomId: room.id, message, username });
       }
     } else {
-      showFeedback('Invalid message format', 'error');
+      console.error('Received unexpected message format:', error);
     }
   }, [socketRef, room]);
 
@@ -77,10 +95,17 @@ export const useMessages = (socketRef, room, currentPage, setHasMoreMessages, sh
     setEditMessage('');
   };
 
-  const handleDeleteMessage = useCallback((messageId) => {
-    deleteMessageById(messageId);
+  const handleDeleteMessage = useCallback(async (messageId) => {
+    try {
+      await deleteMessageById(messageId);
+      setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== messageId));
+      showFeedback('Message deleted successfully', 'success');
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      showFeedback('Failed to delete message', 'error');
+    }
   }, []);
 
 
-  return { sendMessage, loadMessages, messages, hasMoreMessages: true };
+  return { sendMessage, loadMessages, handleEditMessage, handleCancelEdit, handleDeleteMessage, messages, hasMoreMessages: true };
 };

@@ -127,20 +127,18 @@ export const validateMessage = (message) => {
   return message && message.trim() !== '';
 };
 
-export const fetchMessages = async (roomName, page, showFeedback) => {
+export const fetchMessages = async (roomName, page) => {
   try {
     const response = await fetch(`/api/users/rooms/${roomName}/messages?page=${page}&limit=20`);
 
     if (!response.ok) {
       console.error(`Failed to fetch messages: ${response.status} ${response.statusText}`);
-      showFeedback(`Error: Failed to fetch messages (${response.status})`, 'error');
       return;
     }
 
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
       console.error('Received non-JSON response');
-      showFeedback('Error: Received invalid response format', 'error');
       return; 
     }
 
@@ -148,14 +146,13 @@ export const fetchMessages = async (roomName, page, showFeedback) => {
     return newMessages;
   } catch (error) {
     console.error('Error fetching messages:', error);
-    showFeedback('Error: Failed to fetch messages', 'error');
     return;
   }
 };
 
 export const deleteMessageById = async (msgId) => {
   try {
-    const response = await fetch(`/api/messages/${msgId}`, {
+    const response = await fetch(`/api/users/messages/${msgId}`, {
       method: 'DELETE',
     });
 
@@ -171,7 +168,7 @@ export const deleteMessageById = async (msgId) => {
 export const editMessageById = async (msgId, newMessage) => {
   try {
     if (newMessage.trim()) {
-      const response = await fetch(`/api/messages/${msgId}`, {
+      const response = await fetch(`/api/users/messages/${msgId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

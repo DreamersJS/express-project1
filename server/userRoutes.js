@@ -238,7 +238,7 @@ router.get('/rooms/:roomName/messages', async (req, res) => {
       return res.status(404).json({ message: 'Room not found' });
     }
 
-    const [messageRows] = await db.query('SELECT username, message, sent_at FROM messages WHERE room_id = ? ORDER BY sent_at ASC', [room.id]);
+    const [messageRows] = await db.query('SELECT id, username, message, sent_at FROM messages WHERE room_id = ? ORDER BY sent_at ASC', [room.id]);
     res.json(messageRows);
   } catch (error) {
     console.error('Error retrieving messages:', error);
@@ -248,42 +248,44 @@ router.get('/rooms/:roomName/messages', async (req, res) => {
 
 // Edit a message
 router.put('/messages/:id', async (req, res) => {
-  const messageId = req.params.id;
+  const { id } = req.params;
   const { message } = req.body;
 
   if (!message) {
-    return res.status(400).json({ message: 'Message content is required' });
+    return res.status(400).json({ error: 'Message content is required' });
   }
 
   try {
-    const [result] = await db.query('UPDATE messages SET message = ? WHERE id = ?', [message, messageId]);
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Message not found' });
+    const [existingMessage] = await db.query('SELECT * FROM messages WHERE id = ?', [id]);
+    if (existingMessage.length === 0) {
+      return res.status(404).json({ error: 'Message not found' });
     }
 
-    res.status(200).json({ message: 'Message updated successfully' });
+    await db.query('UPDATE messages SET message = ? WHERE id = ?', [message, id]);
+
+    res.status(200).json({ id, message });
   } catch (error) {
     console.error('Error updating message:', error);
-    res.status(500).json({ message: 'Error updating message', error });
+    res.status(500).json({ error: 'Failed to update message' });
   }
 });
 
 // Delete a message
 router.delete('/messages/:id', async (req, res) => {
-  const messageId = req.params.id;
+  const { id } = req.params;
 
   try {
-    const [result] = await db.query('DELETE FROM messages WHERE id = ?', [messageId]);
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Message not found' });
+    const [existingMessage] = await db.query('SELECT * FROM messages WHERE id = ?', [id]);
+    if (existingMessage.length === 0) {
+      return res.status(404).json({ error: 'Message not found' });
     }
+
+    await db.query('DELETE FROM messages WHERE id = ?', [id]);
 
     res.status(200).json({ message: 'Message deleted successfully' });
   } catch (error) {
     console.error('Error deleting message:', error);
-    res.status(500).json({ message: 'Error deleting message', error });
+    res.status(500).json({ error: 'Failed to delete message' });
   }
 });
 

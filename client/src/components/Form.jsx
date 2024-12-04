@@ -31,7 +31,7 @@ const Form = ({ showFeedback }) => {
   const { room, joinRoom } = useRoom(socketRef, showFeedback);
 
   // Handle messages with useMessages hook
-  const { sendMessage, messages, loadMessages } = useMessages(
+  const { sendMessage, messages, loadMessages, handleDeleteMessage } = useMessages(
     socketRef,
     room,
     currentPage,
@@ -83,6 +83,7 @@ const Form = ({ showFeedback }) => {
         messagesListRef={messagesListRef}
         messagesEndRef={messagesEndRef}
         handleScroll={handleScroll}
+        handleDeleteMessage={handleDeleteMessage}
       />
       <ScrollButton show={showScrollButton} scrollToBottom={() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })} />
 
