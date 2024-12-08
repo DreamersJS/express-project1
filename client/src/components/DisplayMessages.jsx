@@ -1,11 +1,20 @@
-import React, { useState } from 'react';
-// import { deleteMessageById } from '../../service/service';
+import React, { useEffect, useState } from 'react';
+import { editMessageById } from '../../service/service';
 
 const DisplayMessages = ({ user, messages, messagesListRef, messagesEndRef, handleScroll, handleDeleteMessage }) => {
   const [visibleMsgDropdown, setVisibleMsgDropdown] = useState(null);
   const [isEditing, setIsEditing] = useState(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [newMessage, setNewMessage] = useState('');
 
-  console.log('Messages data:', JSON.stringify(messages, null, 2));
+  const toggleModal = () => {
+    setIsModalVisible(prev => !prev);
+  };
+
+  // console.log('Messages data:', JSON.stringify(messages, null, 2));
+useEffect(()=>{
+  console.log(`newMessage: ${newMessage}`);
+}, [newMessage]);
 
   const handleOpenCloseDropdown = (index) => {
 
@@ -15,18 +24,18 @@ const DisplayMessages = ({ user, messages, messagesListRef, messagesEndRef, hand
       setVisibleMsgDropdown(index);
     }
   }
-  // const handleEditMsg = (event, msgId) => {
-  //   event.stopPropagation();
-  //   setIsEditing(msgId);
-  //  }
-  //  const saveEdit = async (msgId, newContent) => {
-  //   try {
-  //     await sendMessage(msgId, { message: newContent });
-  //     setIsEditing(null);
-  //   } catch (error) {
-  //     console.error("Error updating message:", error);
-  //   }
-  // };
+
+  const handleEditMsg = (event, msgId, message) => {
+    event.stopPropagation();
+    setNewMessage(message);
+    setIsEditing(msgId);
+    toggleModal();
+   }
+
+   const handleCancelEdit = () => {
+    setIsEditing(null);
+    toggleModal();
+  };
 
   const handleDeleteMsg = async (event, msgId) => {
     event.stopPropagation();
@@ -35,7 +44,10 @@ const DisplayMessages = ({ user, messages, messagesListRef, messagesEndRef, hand
       return;
     }
     try {
-      await handleDeleteMessage(msgId);
+      const confirmDelete = window.confirm("Are you sure you want to delete this message?");
+      if (confirmDelete) {
+        await handleDeleteMessage(msgId);
+      }
     } catch (error) {
       console.error("Error deleting message:", error);
     }
@@ -62,13 +74,27 @@ const DisplayMessages = ({ user, messages, messagesListRef, messagesEndRef, hand
               {
                 visibleMsgDropdown === msg.id && (
                   <div>
-                    <button>Edit</button>
+                    <button onClick={(event)=>{handleEditMsg(event, msg.id, msg.message  )}}>Edit</button>
                     <button onClick={(event) => { handleDeleteMsg(event, msg.id) }}>Delete</button>
                     <button>Translate</button>
                   </div>
                 )
               }
-
+  {/* edit modal */}
+  {
+    isModalVisible && isEditing === msg.id && (
+      <div>
+        <input
+          type='text'
+          value={newMessage}
+          onChange={(event) => setNewMessage(event.target.value)}
+          placeholder='Enter new message'
+        />
+        <button onClick={() => editMessageById(msg.id, newMessage)}>Save</button>
+        <button onClick={handleCancelEdit}>Cancel</button>
+      </div>
+    )
+  }
             </li>
           );
         })}

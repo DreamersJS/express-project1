@@ -5,7 +5,7 @@ export const useMessages = (socketRef, room, currentPage, setHasMoreMessages, sh
   const [messages, setMessages] = useState([]);
   const [editMessageId, setEditMessageId] = useState(null);
   const [editMessage, setEditMessage] = useState('');
-  // const [isEditing, setIsEditing] = useState(null);
+  const [isEditing, setIsEditing] = useState(null);
 
   const loadMessages = useCallback(async () => {
     if (room?.name) {
@@ -26,12 +26,6 @@ export const useMessages = (socketRef, room, currentPage, setHasMoreMessages, sh
             return uniqueMessages;
           });
 
-          // Append new messages to the existing messages
-          // setMessages(prevMessages => Array.isArray(prevMessages)
-          //   ? [...prevMessages, ...fetchedMessages]
-          //   : fetchedMessages
-          // );
-
         }
       } catch (error) {
         console.error('Error fetching messages:', error);
@@ -40,14 +34,10 @@ export const useMessages = (socketRef, room, currentPage, setHasMoreMessages, sh
     }
   }, [room, currentPage, setHasMoreMessages]);
 
-  // useEffect(() => {
-  //   loadMessages();
-  // }, [loadMessages]);
-
   // Reset messages when room changes
   useEffect(() => {
-    setMessages([]); // Clear messages when room changes
-    loadMessages(); // Reload messages for the new room
+    setMessages([]); 
+    loadMessages(); 
   }, [room, loadMessages]);
 
   useEffect(() => {
@@ -85,6 +75,7 @@ export const useMessages = (socketRef, room, currentPage, setHasMoreMessages, sh
       if (socketRef.current) {
         editMessageById(messageId, message);
       }
+      loadMessages();
     } else {
       showFeedback('Invalid message format', 'error');
     }
