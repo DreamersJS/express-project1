@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-// import { editMessageById } from '../../service/service';
 
 const DisplayMessages = ({ user, messages, messagesListRef, messagesEndRef, handleScroll, handleDeleteMessage, loadNextPage, handleEditMessage, isLoading }) => {
   const [visibleMsgDropdown, setVisibleMsgDropdown] = useState(null);
@@ -10,11 +9,6 @@ const DisplayMessages = ({ user, messages, messagesListRef, messagesEndRef, hand
   const toggleModal = () => {
     setIsModalVisible(prev => !prev);
   };
-
-  // console.log('Messages data:', JSON.stringify(messages, null, 2));
-  useEffect(() => {
-    console.log(`newMessage: ${newMessage}`);
-  }, [newMessage]);
 
   const handleOpenCloseDropdown = (index) => {
 
@@ -31,6 +25,16 @@ const DisplayMessages = ({ user, messages, messagesListRef, messagesEndRef, hand
     setIsEditing(msgId);
     toggleModal();
   }
+
+  const handleSaveEdit = async (msgId, editedMessage) => {
+    try {
+      await handleEditMessage(msgId, editedMessage); 
+      setIsEditing(null); 
+      toggleModal(); 
+    } catch (error) {
+      console.error('Error saving the edited message:', error);
+    }
+  };
 
   const handleCancelEdit = () => {
     setIsEditing(null);
@@ -65,11 +69,17 @@ const DisplayMessages = ({ user, messages, messagesListRef, messagesEndRef, hand
               : 'other';
           return (
             <li key={index} className={className}>
-              {`${msg.username || 'Unknown'}: ${msg.message || 'Invalid message'}`}
+              <span className="username">
+                {msg.username || 'Unknown'}:
+              </span>
+              <span className="message">
+               {msg.message || 'Invalid message'}
+              </span>
+              {/* {`${msg.username || 'Unknown'}: ${msg.message || 'Invalid message'}`} */}
               {
 
                 msg.username === user?.username && msg.id
-                  ? <button onClick={() => handleOpenCloseDropdown(msg.id)}>dropdown{`${msg.id}`}</button>
+                  ? <button onClick={() => handleOpenCloseDropdown(msg.id)}>dropdown</button>
                   : null
               }
               {
@@ -91,7 +101,7 @@ const DisplayMessages = ({ user, messages, messagesListRef, messagesEndRef, hand
                       onChange={(event) => setNewMessage(event.target.value)}
                       placeholder='Enter new message'
                     />
-                    <button onClick={() => handleEditMessage(msg.id, newMessage)}>Save</button>
+                    <button onClick={() => handleSaveEdit(msg.id, newMessage)}>Save</button>
                     <button onClick={handleCancelEdit}>Cancel</button>
                   </div>
                 )

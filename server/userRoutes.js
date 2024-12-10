@@ -222,9 +222,11 @@ router.get('/rooms', async (req, res) => {
   }
 });
 
+
 // Backend API route to GET messages from a specific room
 router.get('/rooms/:roomName/messages', async (req, res) => {
   const { roomName } = req.params;
+  const { limit = 20, offset = 0 } = req.query;
 
   if (typeof roomName !== 'string') {
     console.log('userRoutes.js: roomName must be a string');
@@ -238,10 +240,12 @@ router.get('/rooms/:roomName/messages', async (req, res) => {
       return res.status(404).json({ message: 'Room not found' });
     }
 
-    const [messageRows] = await db.query('SELECT id, username, message, sent_at FROM messages WHERE room_id = ? ORDER BY sent_at ASC', [room.id]);
+    const order = req.query.order === 'desc' ? 'DESC' : 'ASC';
+    const [messageRows] = await db.query(
+      `SELECT id, username, message, sent_at FROM messages WHERE room_id = ? ORDER BY sent_at ${order} LIMIT ? OFFSET ?`, [room.id, parseInt(limit, 10), parseInt(offset, 10)]);
     res.json(messageRows);
   } catch (error) {
-    console.error('Error retrieving messages:', error);
+    console.error(`Error retrieving messages for room ${roomName}:`, error);
     res.status(500).json({ message: 'Failed to retrieve messages' });
   }
 });
@@ -288,6 +292,6 @@ router.delete('/messages/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to delete message' });
   }
 });
-
+ 
 
 export default router;

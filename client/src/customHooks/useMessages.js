@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { fetchMessages, validateMessage, editMessageById, deleteMessageById } from '../../service/service';
+import { fetchMessages, validateMessage, editMessageById, deleteMessageById } from '../../service/service-msg';
 import { useSocket } from '../context/SocketProvider';
 
 // Improved Modularity: The hook is now decoupled from socketRef, making it easier to test and reuse.
@@ -17,7 +17,7 @@ export const useMessages = (room, showFeedback) => {
     if (room?.name) {
       setIsLoading(true);
       try {
-        const fetchedMessages = await fetchMessages(room.name, currentPage);
+        const fetchedMessages = await fetchMessages(room.name, currentPage, 'asc');
         setIsLoading(false);
         if (fetchedMessages) {
           if (fetchedMessages.length < 20) {
@@ -26,7 +26,7 @@ export const useMessages = (room, showFeedback) => {
 
           // Combine fetched messages with existing messages, avoiding duplicates
           setMessages((prevMessages) => {
-            const combined = [...prevMessages, ...fetchedMessages];
+            const combined = [ ...prevMessages, ...fetchedMessages ]; // Fetch messages in reverse order: newer messages first
             const uniqueMessages = combined.filter(
               (message, index, self) =>
                 index === self.findIndex((m) => m.id === message.id)
@@ -40,7 +40,7 @@ export const useMessages = (room, showFeedback) => {
         showFeedback('Error: Failed to fetch messages', 'error');
       }
     }
-  }, [room, currentPage, hasMoreMessages]);
+  }, [room, currentPage]);
 
   // Reset messages and pagination when the room changes
   useEffect(() => {
@@ -54,7 +54,7 @@ export const useMessages = (room, showFeedback) => {
   useEffect(() => {
     const handleIncomingMessages = (data) => {
       if (data && data.username && data.message) {
-        setMessages(prevMessages => Array.isArray(prevMessages) ? [...prevMessages, data] : [data]);
+        setMessages(prevMessages => Array.isArray(prevMessages) ? [ ...prevMessages, data] : [data]); // New messages come first
       } else {
         console.error('Received unexpected message format:', data);
       }
@@ -84,12 +84,13 @@ export const useMessages = (room, showFeedback) => {
       } catch (error) {
         console.error('Error editing message:', error);
         showFeedback('Failed to edit message', 'error');
-        
+        throw error;
       }
     } else {
       showFeedback('Invalid message format', 'error');
+      throw new Error('Invalid message format');
     }
-  }, []);
+  }, [loadMessages]);
 
   const handleCancelEdit = () => {
     setIsEditing(null);

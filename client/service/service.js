@@ -123,13 +123,21 @@ export const putUserDetails = async (user, token) => {
   }
 }
 
+
+
+
+
+
+
+
+
 export const validateMessage = (message) => {
   return message && message.trim() !== '';
 };
 
-export const fetchMessages = async (roomName, page) => {
+export const fetchMessages = async (roomName, page, order = 'asc', limit=20, offset=0) => {
   try {
-    const response = await fetch(`/api/users/rooms/${roomName}/messages?page=${page}&limit=20`);
+    const response = await fetch(`/api/users/rooms/${roomName}/messages?page=${page}&limit=${limit}&offset=${offset}&order=${order}`);
 
     if (!response.ok) {
       console.error(`Failed to fetch messages: ${response.status} ${response.statusText}`);

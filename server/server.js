@@ -3,6 +3,7 @@ import { Server } from 'socket.io';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import userRoutes from './userRoutes.js';
+import msgRoutes from './msgRoutes.js';
 import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
 import db from './db.js';
@@ -31,6 +32,7 @@ app.use(express.json());
 
 // API Routes
 app.use('/api/users', userRoutes);
+app.use('/api/messages', msgRoutes); // to be implemented
 
 // Serve static files
 app.use(express.static(path.join(__dirname, '../client')));
