@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { editMessageById } from '../../service/service';
+// import { editMessageById } from '../../service/service';
 
-const DisplayMessages = ({ user, messages, messagesListRef, messagesEndRef, handleScroll, handleDeleteMessage }) => {
+const DisplayMessages = ({ user, messages, messagesListRef, messagesEndRef, handleScroll, handleDeleteMessage, loadNextPage, handleEditMessage, isLoading }) => {
   const [visibleMsgDropdown, setVisibleMsgDropdown] = useState(null);
   const [isEditing, setIsEditing] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -12,9 +12,9 @@ const DisplayMessages = ({ user, messages, messagesListRef, messagesEndRef, hand
   };
 
   // console.log('Messages data:', JSON.stringify(messages, null, 2));
-useEffect(()=>{
-  console.log(`newMessage: ${newMessage}`);
-}, [newMessage]);
+  useEffect(() => {
+    console.log(`newMessage: ${newMessage}`);
+  }, [newMessage]);
 
   const handleOpenCloseDropdown = (index) => {
 
@@ -30,9 +30,9 @@ useEffect(()=>{
     setNewMessage(message);
     setIsEditing(msgId);
     toggleModal();
-   }
+  }
 
-   const handleCancelEdit = () => {
+  const handleCancelEdit = () => {
     setIsEditing(null);
     toggleModal();
   };
@@ -55,6 +55,7 @@ useEffect(()=>{
 
   return (
     <>
+      {isLoading && <div className="loader">Loading...</div>}
       <ul className='msg-display' ref={messagesListRef} onScroll={handleScroll}>
         {messages.map((msg, index) => {
           const className = msg.username === user?.username
@@ -66,40 +67,41 @@ useEffect(()=>{
             <li key={index} className={className}>
               {`${msg.username || 'Unknown'}: ${msg.message || 'Invalid message'}`}
               {
-              
-                msg.username === user?.username && msg.id 
+
+                msg.username === user?.username && msg.id
                   ? <button onClick={() => handleOpenCloseDropdown(msg.id)}>dropdown{`${msg.id}`}</button>
                   : null
               }
               {
                 visibleMsgDropdown === msg.id && (
                   <div>
-                    <button onClick={(event)=>{handleEditMsg(event, msg.id, msg.message  )}}>Edit</button>
+                    <button onClick={(event) => { handleEditMsg(event, msg.id, msg.message) }}>Edit</button>
                     <button onClick={(event) => { handleDeleteMsg(event, msg.id) }}>Delete</button>
                     <button>Translate</button>
                   </div>
                 )
               }
-  {/* edit modal */}
-  {
-    isModalVisible && isEditing === msg.id && (
-      <div>
-        <input
-          type='text'
-          value={newMessage}
-          onChange={(event) => setNewMessage(event.target.value)}
-          placeholder='Enter new message'
-        />
-        <button onClick={() => editMessageById(msg.id, newMessage)}>Save</button>
-        <button onClick={handleCancelEdit}>Cancel</button>
-      </div>
-    )
-  }
+              {/* edit modal */}
+              {
+                isModalVisible && isEditing === msg.id && (
+                  <div>
+                    <input
+                      type='text'
+                      value={newMessage}
+                      onChange={(event) => setNewMessage(event.target.value)}
+                      placeholder='Enter new message'
+                    />
+                    <button onClick={() => handleEditMessage(msg.id, newMessage)}>Save</button>
+                    <button onClick={handleCancelEdit}>Cancel</button>
+                  </div>
+                )
+              }
             </li>
           );
         })}
         <div ref={messagesEndRef} />
       </ul>
+
     </>
   )
 }

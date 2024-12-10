@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSocket } from '../context/SocketProvider';
 
 /**
  * 
@@ -6,26 +7,27 @@ import { useState, useEffect } from 'react';
  * @param {*} showFeedback showFeedback
  * @returns {Object} An object containing the current room state and the joinRoom function.
  */
-export const useRoom = (socket, showFeedback) => {
+export const useRoom = ( showFeedback) => {
   const [room, setRoom] = useState({ id: null, name: '' });
+  const { onEvent, offEvent, sendEvent, socket } = useSocket();
 
   useEffect(() => {
-    if (socket.current) {
+    if (socket) {
       // Handle the 'roomCreated' event
       const handleRoomCreated = ({ roomId, roomName }) => {
-        setRoom({ id: roomId, name: roomName }); // Update the room state
-        showFeedback(`Joined room: ${roomName}`, 'info'); // Provide feedback to the user
+        setRoom({ id: roomId, name: roomName }); 
+        showFeedback(`Joined room: ${roomName}`, 'info');  
       };
 
       // Listen for the 'roomCreated' event
-      socket.current.on('roomCreated', handleRoomCreated);
+      onEvent('roomCreated', handleRoomCreated);
 
       // Cleanup to avoid memory leaks
       return () => {
-        socket.current.off('roomCreated', handleRoomCreated);
+        offEvent('roomCreated', handleRoomCreated);
       };
     }
-  }, [socket, showFeedback]);
+  }, [socket, onEvent, offEvent, showFeedback]);
 
   /**
    * This will handle leaving the current room and joining the new one
@@ -33,18 +35,18 @@ export const useRoom = (socket, showFeedback) => {
    */
   const joinRoom = (newRoomName) => {
     try {
-      if (socket.current && newRoomName !== room.name) {
+      if (socket && newRoomName !== room.name) {
         if (room.id) {
           // Leave the current room
-          socket.current.emit('leaveRoom', room.id);
+          sendEvent('leaveRoom', room.id);
         }
         // Join the new room
-        socket.current.emit('joinRoom', newRoomName);
+        sendEvent('joinRoom', newRoomName);
         console.log(`Joining room: ${newRoomName} with socket ID: ${socket.id}`);
       }
     } catch (error) {
       console.error('Error creating/joining room:', error);
-      socket.emit('error', { message: 'Failed to join room' });
+      sendEvent('error', { message: 'Failed to join room' });
     }
   };
 

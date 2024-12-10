@@ -1,16 +1,24 @@
 import { useState, useEffect, useCallback } from 'react';
 import { fetchMessages, validateMessage, editMessageById, deleteMessageById } from '../../service/service';
+import { useSocket } from '../context/SocketProvider';
 
-export const useMessages = (socketRef, room, currentPage, setHasMoreMessages, showFeedback) => {
+// Improved Modularity: The hook is now decoupled from socketRef, making it easier to test and reuse.
+export const useMessages = (room, showFeedback) => {
   const [messages, setMessages] = useState([]);
-  const [editMessageId, setEditMessageId] = useState(null);
-  const [editMessage, setEditMessage] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [isEditing, setIsEditing] = useState(null);
+  const [newMessage, setNewMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { onEvent, offEvent, sendEvent } = useSocket();
 
   const loadMessages = useCallback(async () => {
     if (room?.name) {
+      setIsLoading(true);
       try {
         const fetchedMessages = await fetchMessages(room.name, currentPage);
+        setIsLoading(false);
         if (fetchedMessages) {
           if (fetchedMessages.length < 20) {
             setHasMoreMessages(false);
@@ -32,14 +40,17 @@ export const useMessages = (socketRef, room, currentPage, setHasMoreMessages, sh
         showFeedback('Error: Failed to fetch messages', 'error');
       }
     }
-  }, [room, currentPage, setHasMoreMessages]);
+  }, [room, currentPage, hasMoreMessages]);
 
-  // Reset messages when room changes
+  // Reset messages and pagination when the room changes
   useEffect(() => {
-    setMessages([]); 
-    loadMessages(); 
-  }, [room, loadMessages]);
+    setMessages([]);
+    setCurrentPage(1);
+    setHasMoreMessages(true);
+    loadMessages();
+  }, [room]);
 
+  // Handle incoming messages via socket
   useEffect(() => {
     const handleIncomingMessages = (data) => {
       if (data && data.username && data.message) {
@@ -49,41 +60,40 @@ export const useMessages = (socketRef, room, currentPage, setHasMoreMessages, sh
       }
     };
 
-    if (socketRef.current) {
-      socketRef.current.on('message', handleIncomingMessages);
-    }
+    onEvent('message', handleIncomingMessages);
 
     return () => {
-      if (socketRef.current) {
-        socketRef.current.off('message', handleIncomingMessages);
-      }
+      offEvent('message', handleIncomingMessages);
     };
-  }, [socketRef]);
+  }, [onEvent, offEvent]);
 
   const sendMessage = useCallback((message, username) => {
     if (validateMessage(message)) {
-      if (socketRef.current) {
-        socketRef.current.emit('message', { roomId: room.id, message, username });
-      }
+      sendEvent('message', { roomId: room.id, message, username });
     } else {
       console.error('Received unexpected message format:', error);
     }
-  }, [socketRef, room]);
+  }, [sendEvent, room]);
 
   const handleEditMessage = useCallback((messageId, message) => {
     if (validateMessage(message)) {
-      if (socketRef.current) {
+      try {
         editMessageById(messageId, message);
+        loadMessages(); 
+        showFeedback('Message edited successfully', 'success');
+      } catch (error) {
+        console.error('Error editing message:', error);
+        showFeedback('Failed to edit message', 'error');
+        
       }
-      loadMessages();
     } else {
       showFeedback('Invalid message format', 'error');
     }
-  }, [socketRef, room]);
+  }, []);
 
   const handleCancelEdit = () => {
-    setEditMessageId(null);
-    setEditMessage('');
+    setIsEditing(null);
+    setNewMessage('');
   };
 
   const handleDeleteMessage = useCallback(async (messageId) => {
@@ -97,6 +107,21 @@ export const useMessages = (socketRef, room, currentPage, setHasMoreMessages, sh
     }
   }, []);
 
+  const loadNextPage = useCallback(() => {
+    if (hasMoreMessages) {
+      setCurrentPage((prevPage) => prevPage + 1);
+    }
+  }, [hasMoreMessages]);
 
-  return { sendMessage, loadMessages, handleEditMessage, handleCancelEdit, handleDeleteMessage, messages, hasMoreMessages: true };
+  return { 
+    messages,
+    sendMessage,
+    loadMessages,
+    loadNextPage,
+    handleEditMessage,
+    handleDeleteMessage,
+    hasMoreMessages,
+    currentPage,
+    isLoading
+    };
 };
