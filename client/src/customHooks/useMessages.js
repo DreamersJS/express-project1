@@ -103,7 +103,7 @@ export const useMessages = (room, showFeedback) => {
     if (validateMessage(message)) {
       try {
         editMessageById(messageId, message);
-        sendEvent('editMessage', { messageId, message });
+        sendEvent('editMessage', { messageId, newContent: message }  );
         loadMessages();
         showFeedback('Message edited successfully', 'success');
       } catch (error) {
