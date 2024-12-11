@@ -44,7 +44,6 @@ export const useMessages = (room, showFeedback) => {
 
   // Handle edit and delete events from other users, updating the UI
   useEffect(() => {
-    console.log('useEffect: handleEditDelete');
     const handleEdit = ({ id, content }) => {
       setMessages((prevMessages) =>
         prevMessages.map((msg) =>

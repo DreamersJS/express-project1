@@ -16,7 +16,7 @@ router.get('/rooms/:roomName/messages', async (req, res) => {
   const { limit = 20, offset = 0 } = req.query;
 
   if (typeof roomName !== 'string') {
-    console.log('userRoutes.js: roomName must be a string');
+    console.log('roomName must be a string');
     throw new Error('Room name must be a string');
   }
   try {

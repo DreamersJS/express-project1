@@ -13,7 +13,6 @@ export const NavBar = ({ selected, showFeedback }) => {
         navigate('/login');
     };
 
-    console.log({ user });
 
     return (
         <header className="sticky-header">

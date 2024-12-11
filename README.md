@@ -44,7 +44,7 @@ Chat App with Socket.io is a dynamic, real-time messaging platform designed to f
 
 
 - **JavaScript & React**: For building a dynamic user interface and managing front-end logic.
-- **React Router & Context API**:  For efficient navigation and global state managemen
+- **React Router & Context API**:  For efficient navigation and global state management
 - **Vite**:  Fast development tooling.
 - **HTML & CSS**: For structuring and styling.
 - **Express.js**:  For server-side logic and API handling.
@@ -59,10 +59,10 @@ Chat App with Socket.io is a dynamic, real-time messaging platform designed to f
 ### Code Architecture
 
   **Client-Side Components:**
-- The client is divided into service and src folders, with reusable components like Login, RoomForm, UpdateUser, and custom hooks like useRoom, useMessages, and useSocketConnection.
+- The client is divided into service and src folders, with reusable components like Login, RoomForm, UpdateUser, and custom hooks like useRoom, useMessages, and SocketProvider context.
   
  **Backend Architecture:**
-- The backend contains essential files like server.js for server logic, db.js for database connections, and userRoutes.js for managing endpoints.
+- The backend contains essential files like server.js for server logic, db.js for database connections, and userRoutes.js, msgRoutes.js for managing endpoints.
 
 ### Creators
 
