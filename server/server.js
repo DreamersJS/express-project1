@@ -125,6 +125,67 @@ try {
       }
     });
 
+    socket.on('deleteMessage', (messageId) => {
+      console.log('socket.on deleteMessage', messageId);
+      if (!messageId || typeof messageId !== 'string') {
+        console.error('socket.on Invalid or missing message ID for deletion');
+        return;
+      }
+    
+      try {
+        // Emit the event to all connected clients
+        chatNsp.emit('messageDeleted',  { messageId } );// {}
+        console.log(`Message with ID ${messageId} deleted successfully`);
+      } catch (error) {
+        console.error('Error while handling message deletion:', error.message);
+        console.error(error.stack);
+      }
+    });
+    
+    socket.on('editMessage', (data) => {
+      console.log('socket.on editMessage triggered', data);
+    
+      const { messageId, newContent } = data || {};
+      
+      console.log('Extracted messageId:', messageId);
+      console.log('Extracted newContent:', newContent);
+    
+      // Check if messageId is provided
+      if (!messageId) {
+        console.error('Error: Missing message ID for editing.');
+        return;
+      }
+    
+      // Check if newContent is provided
+      if (!newContent) {
+        console.error('Error: Invalid or missing new content for editing the message.');
+        return;
+      }
+    
+      try {
+        console.log(`Attempting to emit message edit for messageId: ${messageId}`);
+        
+        // Emit the updated message to all connected clients
+        chatNsp.emit('messageEdited', { id: messageId, content: newContent });
+        console.log(`Message with ID ${messageId} edited successfully with new content: ${newContent}`);
+      } catch (error) {
+        // Log the error message and stack trace
+        console.error('Error while handling message editing:');
+        console.error(`Error Message: ${error.message}`);
+        console.error(`Stack Trace: ${error.stack}`);
+        console.error(`Data received for edit: ${JSON.stringify(data)}`);
+        
+        // Additional detailed logging for the failure
+        if (error instanceof TypeError) {
+          console.error('A TypeError occurred during message editing.');
+        } else if (error instanceof ReferenceError) {
+          console.error('A ReferenceError occurred during message editing.');
+        } else {
+          console.error('An unknown error occurred during message editing.');
+        }
+      }
+    });
+      
 
     socket.on('message', async (data) => {
       const { roomId, message, username } = data;

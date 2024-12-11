@@ -26,7 +26,7 @@ export const useMessages = (room, showFeedback) => {
 
           // Combine fetched messages with existing messages, avoiding duplicates
           setMessages((prevMessages) => {
-            const combined = [ ...prevMessages, ...fetchedMessages ]; // Fetch messages in reverse order: newer messages first
+            const combined = [...prevMessages, ...fetchedMessages]; // Fetch messages in reverse order: newer messages first
             const uniqueMessages = combined.filter(
               (message, index, self) =>
                 index === self.findIndex((m) => m.id === message.id)
@@ -42,6 +42,30 @@ export const useMessages = (room, showFeedback) => {
     }
   }, [room, currentPage]);
 
+  // Handle edit and delete events from other users, updating the UI
+  useEffect(() => {
+    console.log('useEffect: handleEditDelete');
+    const handleEdit = ({ id, content }) => {
+      setMessages((prevMessages) =>
+        prevMessages.map((msg) =>
+          msg.id === id ? { ...msg, message: content } : msg
+        )
+      );
+    };
+  
+    const handleDelete = ({ messageId }) => {
+     setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== messageId));
+    };
+  
+    onEvent('messageEdited', handleEdit);
+    onEvent('messageDeleted', handleDelete);
+  
+    return () => {
+      offEvent('messageEdited', handleEdit);
+      offEvent('messageDeleted', handleDelete);
+    };
+  }, [onEvent, offEvent]);
+
   // Reset messages and pagination when the room changes
   useEffect(() => {
     setMessages([]);
@@ -54,7 +78,7 @@ export const useMessages = (room, showFeedback) => {
   useEffect(() => {
     const handleIncomingMessages = (data) => {
       if (data && data.username && data.message) {
-        setMessages(prevMessages => Array.isArray(prevMessages) ? [ ...prevMessages, data] : [data]); // New messages come first
+        setMessages(prevMessages => Array.isArray(prevMessages) ? [...prevMessages, data] : [data]); // New messages come first
       } else {
         console.error('Received unexpected message format:', data);
       }
@@ -79,7 +103,8 @@ export const useMessages = (room, showFeedback) => {
     if (validateMessage(message)) {
       try {
         editMessageById(messageId, message);
-        loadMessages(); 
+        sendEvent('editMessage', { messageId, newContent: message }  );
+        loadMessages();
         showFeedback('Message edited successfully', 'success');
       } catch (error) {
         console.error('Error editing message:', error);
@@ -90,7 +115,7 @@ export const useMessages = (room, showFeedback) => {
       showFeedback('Invalid message format', 'error');
       throw new Error('Invalid message format');
     }
-  }, [loadMessages]);
+  }, [loadMessages, sendEvent]);
 
   const handleCancelEdit = () => {
     setIsEditing(null);
@@ -100,13 +125,15 @@ export const useMessages = (room, showFeedback) => {
   const handleDeleteMessage = useCallback(async (messageId) => {
     try {
       await deleteMessageById(messageId);
-      setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== messageId));
+      await sendEvent('deleteMessage', messageId );
+      // with the useEffect for 'deleteMessage' event, the message will be removed from the UI
+      // setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== messageId));
       showFeedback('Message deleted successfully', 'success');
     } catch (error) {
       console.error('Error deleting message:', error);
       showFeedback('Failed to delete message', 'error');
     }
-  }, []);
+  }, [sendEvent]);
 
   const loadNextPage = useCallback(() => {
     if (hasMoreMessages) {
@@ -114,7 +141,7 @@ export const useMessages = (room, showFeedback) => {
     }
   }, [hasMoreMessages]);
 
-  return { 
+  return {
     messages,
     sendMessage,
     loadMessages,
@@ -124,5 +151,5 @@ export const useMessages = (room, showFeedback) => {
     hasMoreMessages,
     currentPage,
     isLoading
-    };
+  };
 };
