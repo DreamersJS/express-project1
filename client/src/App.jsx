@@ -5,6 +5,7 @@ import { Authenticated } from './components/Authenticated.jsx';
 import { NavBar } from './components/NavBar.jsx';
 import Feedback from './components/Feedback.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
+import { SocketProvider } from './context/SocketProvider';
 
 const Form = lazy(() => import('./components/Form.jsx'));
 const Register = lazy(() => import('./components/Register.jsx'));
@@ -23,6 +24,7 @@ function App() {
   };
 
   return (
+    <SocketProvider>
     <BrowserRouter>
       <NavBar showFeedback={showFeedback} />
       <Feedback message={feedback?.message} type={feedback?.type} />
@@ -55,6 +57,7 @@ function App() {
         </ErrorBoundary>
       </Suspense>
     </BrowserRouter>
+    </SocketProvider>
   );
 }
 

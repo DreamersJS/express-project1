@@ -123,24 +123,30 @@ export const putUserDetails = async (user, token) => {
   }
 }
 
+
+
+
+
+
+
+
+
 export const validateMessage = (message) => {
   return message && message.trim() !== '';
 };
 
-export const fetchMessages = async (roomName, page, showFeedback) => {
+export const fetchMessages = async (roomName, page, order = 'asc', limit=20, offset=0) => {
   try {
-    const response = await fetch(`/api/users/rooms/${roomName}/messages?page=${page}&limit=20`);
+    const response = await fetch(`/api/users/rooms/${roomName}/messages?page=${page}&limit=${limit}&offset=${offset}&order=${order}`);
 
     if (!response.ok) {
       console.error(`Failed to fetch messages: ${response.status} ${response.statusText}`);
-      showFeedback(`Error: Failed to fetch messages (${response.status})`, 'error');
       return;
     }
 
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
       console.error('Received non-JSON response');
-      showFeedback('Error: Received invalid response format', 'error');
       return; 
     }
 
@@ -148,8 +154,41 @@ export const fetchMessages = async (roomName, page, showFeedback) => {
     return newMessages;
   } catch (error) {
     console.error('Error fetching messages:', error);
-    showFeedback('Error: Failed to fetch messages', 'error');
     return;
   }
 };
 
+export const deleteMessageById = async (msgId) => {
+  try {
+    const response = await fetch(`/api/users/messages/${msgId}`, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+
+  } catch (error) {
+    console.error('Error deleting message:', error);
+  }
+};
+
+export const editMessageById = async (msgId, newMessage) => {
+  try {
+    if (newMessage.trim()) {
+      const response = await fetch(`/api/users/messages/${msgId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: newMessage }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.statusText}`);
+      }
+    }
+  } catch (error) {
+    console.error('Error editing message:', error);
+  }
+};

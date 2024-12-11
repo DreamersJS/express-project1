@@ -3,10 +3,10 @@
     bottom: 10px;
     left: 10px;
     padding: 10px;
-    border: 1px solid #333;
-    border-radius: 5px;
+    /* border: 1px solid #333; */
+    /* border-radius: 5px; */
     color: #ddd;
-    background-color: #333;
+    background-color: transparent;
     z-index: 1000;
   }
   

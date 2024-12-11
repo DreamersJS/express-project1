@@ -222,11 +222,12 @@ router.get('/rooms', async (req, res) => {
   }
 });
 
+
 // Backend API route to GET messages from a specific room
 router.get('/rooms/:roomName/messages', async (req, res) => {
   const { roomName } = req.params;
+  const { limit = 20, offset = 0 } = req.query;
 
-  // Make sure `roomName` is a string and not an object
   if (typeof roomName !== 'string') {
     console.log('userRoutes.js: roomName must be a string');
     throw new Error('Room name must be a string');
@@ -239,14 +240,58 @@ router.get('/rooms/:roomName/messages', async (req, res) => {
       return res.status(404).json({ message: 'Room not found' });
     }
 
-    const [messageRows] = await db.query('SELECT username, message, sent_at FROM messages WHERE room_id = ? ORDER BY sent_at ASC', [room.id]);
+    const order = req.query.order === 'desc' ? 'DESC' : 'ASC';
+    const [messageRows] = await db.query(
+      `SELECT id, username, message, sent_at FROM messages WHERE room_id = ? ORDER BY sent_at ${order} LIMIT ? OFFSET ?`, [room.id, parseInt(limit, 10), parseInt(offset, 10)]);
     res.json(messageRows);
   } catch (error) {
-    console.error('Error retrieving messages:', error);
+    console.error(`Error retrieving messages for room ${roomName}:`, error);
     res.status(500).json({ message: 'Failed to retrieve messages' });
   }
 });
 
+// Edit a message
+router.put('/messages/:id', async (req, res) => {
+  const { id } = req.params;
+  const { message } = req.body;
 
+  if (!message) {
+    return res.status(400).json({ error: 'Message content is required' });
+  }
+
+  try {
+    const [existingMessage] = await db.query('SELECT * FROM messages WHERE id = ?', [id]);
+    if (existingMessage.length === 0) {
+      return res.status(404).json({ error: 'Message not found' });
+    }
+
+    await db.query('UPDATE messages SET message = ? WHERE id = ?', [message, id]);
+
+    res.status(200).json({ id, message });
+  } catch (error) {
+    console.error('Error updating message:', error);
+    res.status(500).json({ error: 'Failed to update message' });
+  }
+});
+
+// Delete a message
+router.delete('/messages/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const [existingMessage] = await db.query('SELECT * FROM messages WHERE id = ?', [id]);
+    if (existingMessage.length === 0) {
+      return res.status(404).json({ error: 'Message not found' });
+    }
+
+    await db.query('DELETE FROM messages WHERE id = ?', [id]);
+
+    res.status(200).json({ message: 'Message deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting message:', error);
+    res.status(500).json({ error: 'Failed to delete message' });
+  }
+});
+ 
 
 export default router;

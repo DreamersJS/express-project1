@@ -1,63 +1,128 @@
 import { useState, useEffect, useCallback } from 'react';
-import { fetchMessages, validateMessage } from '../../service/service';
+import { fetchMessages, validateMessage, editMessageById, deleteMessageById } from '../../service/service-msg';
+import { useSocket } from '../context/SocketProvider';
 
-export const useMessages = (socketRef, room, currentPage, setHasMoreMessages, showFeedback) => {
-  const [messages, setMessages] = useState([]);  
+// Improved Modularity: The hook is now decoupled from socketRef, making it easier to test and reuse.
+export const useMessages = (room, showFeedback) => {
+  const [messages, setMessages] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMoreMessages, setHasMoreMessages] = useState(true);
+  const [isEditing, setIsEditing] = useState(null);
+  const [newMessage, setNewMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { onEvent, offEvent, sendEvent } = useSocket();
 
   const loadMessages = useCallback(async () => {
     if (room?.name) {
+      setIsLoading(true);
       try {
-        const fetchedMessages = await fetchMessages(room.name, currentPage, showFeedback);
+        const fetchedMessages = await fetchMessages(room.name, currentPage, 'asc');
+        setIsLoading(false);
         if (fetchedMessages) {
           if (fetchedMessages.length < 20) {
             setHasMoreMessages(false);
           }
-          setMessages(prevMessages => Array.isArray(prevMessages)
-            ? [...prevMessages, ...fetchedMessages]
-            : fetchedMessages
-          );
+
+          // Combine fetched messages with existing messages, avoiding duplicates
+          setMessages((prevMessages) => {
+            const combined = [ ...prevMessages, ...fetchedMessages ]; // Fetch messages in reverse order: newer messages first
+            const uniqueMessages = combined.filter(
+              (message, index, self) =>
+                index === self.findIndex((m) => m.id === message.id)
+            );
+            return uniqueMessages;
+          });
+
         }
       } catch (error) {
         console.error('Error fetching messages:', error);
         showFeedback('Error: Failed to fetch messages', 'error');
       }
     }
-  }, [room, currentPage, setHasMoreMessages, showFeedback]);
+  }, [room, currentPage]);
 
+  // Reset messages and pagination when the room changes
   useEffect(() => {
+    setMessages([]);
+    setCurrentPage(1);
+    setHasMoreMessages(true);
     loadMessages();
-  }, [loadMessages]);
+  }, [room]);
 
+  // Handle incoming messages via socket
   useEffect(() => {
     const handleIncomingMessages = (data) => {
       if (data && data.username && data.message) {
-        setMessages(prevMessages => Array.isArray(prevMessages) ? [...prevMessages, data] : [data]);
+        setMessages(prevMessages => Array.isArray(prevMessages) ? [ ...prevMessages, data] : [data]); // New messages come first
       } else {
         console.error('Received unexpected message format:', data);
-        showFeedback('Error: Received invalid message format', 'error');
       }
     };
 
-    if (socketRef.current) {
-      socketRef.current.on('message', handleIncomingMessages);
-    }
+    onEvent('message', handleIncomingMessages);
 
     return () => {
-      if (socketRef.current) {
-        socketRef.current.off('message', handleIncomingMessages);
-      }
+      offEvent('message', handleIncomingMessages);
     };
-  }, [socketRef, showFeedback]);
+  }, [onEvent, offEvent]);
 
   const sendMessage = useCallback((message, username) => {
     if (validateMessage(message)) {
-      if (socketRef.current) {
-        socketRef.current.emit('message', { roomId: room.id, message, username });
+      sendEvent('message', { roomId: room.id, message, username });
+    } else {
+      console.error('Received unexpected message format:', error);
+    }
+  }, [sendEvent, room]);
+
+  const handleEditMessage = useCallback((messageId, message) => {
+    if (validateMessage(message)) {
+      try {
+        editMessageById(messageId, message);
+        loadMessages(); 
+        showFeedback('Message edited successfully', 'success');
+      } catch (error) {
+        console.error('Error editing message:', error);
+        showFeedback('Failed to edit message', 'error');
+        throw error;
       }
     } else {
       showFeedback('Invalid message format', 'error');
+      throw new Error('Invalid message format');
     }
-  }, [socketRef, room]);
+  }, [loadMessages]);
 
-  return { sendMessage, loadMessages, messages, hasMoreMessages: true };
+  const handleCancelEdit = () => {
+    setIsEditing(null);
+    setNewMessage('');
+  };
+
+  const handleDeleteMessage = useCallback(async (messageId) => {
+    try {
+      await deleteMessageById(messageId);
+      setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== messageId));
+      showFeedback('Message deleted successfully', 'success');
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      showFeedback('Failed to delete message', 'error');
+    }
+  }, []);
+
+  const loadNextPage = useCallback(() => {
+    if (hasMoreMessages) {
+      setCurrentPage((prevPage) => prevPage + 1);
+    }
+  }, [hasMoreMessages]);
+
+  return { 
+    messages,
+    sendMessage,
+    loadMessages,
+    loadNextPage,
+    handleEditMessage,
+    handleDeleteMessage,
+    hasMoreMessages,
+    currentPage,
+    isLoading
+    };
 };

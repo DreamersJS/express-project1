@@ -3,7 +3,6 @@ import { AppContext } from '../AppContext';
 import './Form.css';
 import { useRoom } from '../customHooks/useRoom';
 import { useMessages } from '../customHooks/useMessages';
-import { useSocketConnection } from '../customHooks/useSocketConnection';
 import RoomForm from './RoomForm';
 import ScrollButton from './ScrollButton';
 import DisplayMessages from './DisplayMessages';
@@ -16,26 +15,19 @@ const Form = ({ showFeedback }) => {
 
   const [message, setMessage] = useState('');
   const [showScrollButton, setShowScrollButton] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [hasMoreMessages, setHasMoreMessages] = useState(true);
-
-  const socketUrl = import.meta.env.VITE_SOCKET_URL;
-  
-  if (!socketUrl) {
-    console.error('Socket URL is undefined');
-    showFeedback('Error: Socket URL is undefined', 'error');
-    return;
-  }
-  
-  const socketRef = useSocketConnection(socketUrl, user, showFeedback);
-  const { room, joinRoom } = useRoom(socketRef, showFeedback);
-
-  // Handle messages with useMessages hook
-  const { sendMessage, messages, loadMessages } = useMessages(
-    socketRef,
-    room,
+  // to refactor useRoom with useSocket provider
+  const { room, joinRoom } = useRoom( showFeedback);
+  const { messages,
+    sendMessage,
+    loadMessages,
+    loadNextPage,
+    handleEditMessage,
+    handleDeleteMessage,
+    hasMoreMessages,
     currentPage,
-    setHasMoreMessages,
+    isLoading
+  } = useMessages(
+    room,
     showFeedback
   );
 
@@ -49,7 +41,6 @@ const Form = ({ showFeedback }) => {
     e.preventDefault();
     if (message.trim()) {
       sendMessage(message, user?.username);
-
       setMessage('');
     } else {
       showFeedback('Please enter a valid message.', 'error');
@@ -59,7 +50,7 @@ const Form = ({ showFeedback }) => {
   const handleScroll = () => {
     const messagesList = messagesListRef.current;
     if (messagesList.scrollTop === 0 && hasMoreMessages) {
-      setCurrentPage((prevPage) => prevPage + 1);
+      loadNextPage();
     }
     setShowScrollButton(
       messagesList.scrollTop < messagesList.scrollHeight - messagesList.clientHeight - 1
@@ -76,13 +67,17 @@ const Form = ({ showFeedback }) => {
       <RoomForm joinRoom={joinRoom} currentRoomName={room.name} showFeedback={showFeedback} />
 
       {/* Messages Display */}
-      {room.name && <h3>Messages in {room.name}</h3>}
+      {room.name && <h4>Messages in {room.name}</h4>}
       <DisplayMessages
         user={user}
         messages={messages}
         messagesListRef={messagesListRef}
         messagesEndRef={messagesEndRef}
         handleScroll={handleScroll}
+        handleDeleteMessage={handleDeleteMessage}
+        loadNextPage={loadNextPage}
+        handleEditMessage={handleEditMessage}
+        isLoading={isLoading}
       />
       <ScrollButton show={showScrollButton} scrollToBottom={() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })} />
 

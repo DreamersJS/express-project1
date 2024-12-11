@@ -24,3 +24,6 @@ dist-ssr
 *.sln
 *.sw?
 tips.md
+
+Gr.jsx
+tips-db.md

@@ -3,6 +3,7 @@ import { Server } from 'socket.io';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import userRoutes from './userRoutes.js';
+import msgRoutes from './msgRoutes.js';
 import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
 import db from './db.js';
@@ -31,6 +32,7 @@ app.use(express.json());
 
 // API Routes
 app.use('/api/users', userRoutes);
+app.use('/api/messages', msgRoutes); // to be implemented
 
 // Serve static files
 app.use(express.static(path.join(__dirname, '../client')));
@@ -73,93 +75,89 @@ try {
     // Create a new room and join it
     socket.on('joinRoom', async (roomName) => {
       try {
-          console.log(`Socket ${socket.id} attempting to join room: ${roomName}`);
+        console.log(`Socket ${socket.id} attempting to join room: ${roomName}`);
 
-              // Make sure `roomName` is a string and not an object
-    if (typeof roomName !== 'string') {
-      console.log('server.js joinRoom: roomName must be a string');
-      throw new Error('Room name must be a string');
-    }
-          // Check if the room already exists
-          const [existingRooms] = await db.query('SELECT id FROM rooms WHERE name = ?', [roomName]);
-          let roomId;
+        if (typeof roomName !== 'string') {
+          throw new Error('Room name must be a string');
+        }
+        // Check if the room already exists
+        const [existingRooms] = await db.query('SELECT id FROM rooms WHERE name = ?', [roomName]);
+        let roomId;
 
-          if (existingRooms.length > 0) {
-              // Room already exists
-              roomId = existingRooms[0].id;
-              console.log(`Room exists. Socket ${socket.id} joining room: ${roomId}`);
-          } else {
-              // Create a new room
-              roomId = uuidv4();
-              await db.query('INSERT INTO rooms (id, name) VALUES (?, ?)', [roomId, roomName]);
-              console.log(`Created new room ${roomId}. Socket ${socket.id} joining room.`);
-          }
+        if (existingRooms.length > 0) {
+          // Room already exists
+          roomId = existingRooms[0].id;
+          console.log(`Room exists. Socket ${socket.id} joining room: ${roomId}`);
+        } else {
+          // Create a new room
+          roomId = uuidv4();
+          await db.query('INSERT INTO rooms (id, name) VALUES (?, ?)', [roomId, roomName]);
+          console.log(`Created new room ${roomId}. Socket ${socket.id} joining room.`);
+        }
 
-          // Join the room
-          socket.join(roomId);
-          socket.emit('roomCreated', { roomId, roomName });
+        // Join the room
+        socket.join(roomId);
+        socket.emit('roomCreated', { roomId, roomName });
 
-          // Notify the room of the new user
-          chatNsp.to(roomId).emit('message', { username: 'System', message: `${username || socket.id} has joined the room ${roomName}` });
+        // Notify the room of the new user
+        chatNsp.to(roomId).emit('message', { username: 'System', message: `${username || socket.id} has joined the room ${roomName}` });
 
       } catch (error) {
-          console.error(`Error during room join process for socket ${socket.id}:`, error);
-          socket.emit('error', { message: 'Failed to join room' });
+        console.error(`Error during room join process for socket ${socket.id}:`, error);
+        socket.emit('error', { message: 'Failed to join room' });
       }
-  });
+    });
 
-  socket.on('leaveRoom', async (roomId) => {
+    socket.on('leaveRoom', async (roomId) => {
       try {
-          if (roomId) {
-              socket.leave(roomId);
-              console.log(`Socket ${socket.id} left room: ${roomId}`);
-              chatNsp.to(roomId).emit('message', {
-                  username: 'System',
-                  message: `${username || 'Anonymous'} has left the room.`
-              });
-          } else {
-              console.log(`Socket ${socket.id} attempted to leave a room without providing roomId.`);
-          }
+        if (roomId) {
+          socket.leave(roomId);
+          chatNsp.to(roomId).emit('message', {
+            username: 'System',
+            message: `${username || 'Anonymous'} has left the room.`
+          });
+        } else {
+          console.log(`Socket ${socket.id} attempted to leave a room without providing roomId.`);
+        }
       } catch (error) {
-          console.error(`Error during room leave process for socket ${socket.id}:`, error);
-          socket.emit('error', { message: 'Failed to leave room' });
+        console.error(`Error during room leave process for socket ${socket.id}:`, error);
+        socket.emit('error', { message: 'Failed to leave room' });
       }
-  });
+    });
 
 
-  socket.on('message', async (data) => {
-    const { roomId, message, username } = data;
-    const checkRoomExists = async (roomId) => {
-      const [rows] = await db.query('SELECT id FROM rooms WHERE id = ?', [roomId]);
-      return rows.length > 0;
-    };
-    
-    if (!message || typeof message !== 'string' || !message.trim()) {
-      console.log('Invalid message:', message);
-      return;
-    }
+    socket.on('message', async (data) => {
+      const { roomId, message, username } = data;
+      const checkRoomExists = async (roomId) => {
+        const [rows] = await db.query('SELECT id FROM rooms WHERE id = ?', [roomId]);
+        return rows.length > 0;
+      };
 
-    const messageWithUsername = { username: username || 'Anonymous', message };
+      if (!message || typeof message !== 'string' || !message.trim()) {
+        console.log('Invalid message:', message);
+        return;
+      }
+      
+      const messageWithUsername = { username: username || 'Anonymous', message };
 
-    if (roomId) {
-      if (await checkRoomExists(roomId)) {
-        const messageId = uuidv4();
-        try {
-          chatNsp.to(roomId).emit('message', messageWithUsername);
-          await db.query('INSERT INTO messages (id, room_id, username, message) VALUES (?, ?, ?, ?)', [messageId, roomId, username, message]);
-          console.log('Message inserted successfully');
-        } catch (error) {
-          console.error('Database insert error:', error);
+      if (roomId) {
+        if (await checkRoomExists(roomId)) {
+          const messageId = uuidv4();
+          const messageData = { username: username || 'Anonymous', message, id: messageId };
+          try {
+            chatNsp.to(roomId).emit('message', messageData);
+            await db.query('INSERT INTO messages (id, room_id, username, message) VALUES (?, ?, ?, ?)', [messageId, roomId, username, message]);
+            console.log('Message inserted successfully');
+          } catch (error) {
+            console.error('Database insert error:', error);
+          }
+        } else {
+          console.error('Room does not exist:', roomId);
         }
       } else {
-        console.error('Room does not exist:', roomId);
+        chatNsp.emit('message', messageWithUsername);
       }
-    } else {
-      chatNsp.emit('message', messageWithUsername);
-    }
-  });
-  
-
+    });
 
     socket.on('disconnect', () => {
       console.log('User disconnected from /chat:', socket.id);
