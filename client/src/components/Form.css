@@ -7,8 +7,8 @@ ul {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: calc(90vh - 50px);
-  margin-top: 50px;
+  height: calc(90vh - 30px);
+  margin-top: 40px;
   width: 97%;
   /* background-color: #0000000b; */
   padding: 4px;
@@ -158,6 +158,11 @@ ul {
 }
 
 .container h2 {
+  margin: 0;
+  padding: 0;
+}
+
+.container h4 {
   margin: 0;
   padding: 0;
 }
