@@ -6,6 +6,7 @@ import userRoutes from './userRoutes.js';
 import msgRoutes from './msgRoutes.js';
 import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
+import cors from 'cors';
 import db from './db.js';
 
 dotenv.config(); // Load environment variables
@@ -29,6 +30,7 @@ const app = express();
 
 // Middleware to parse JSON requests
 app.use(express.json());
+// app.use(cors(CORS_ORIGIN));
 
 // API Routes
 app.use('/api/users', userRoutes);
