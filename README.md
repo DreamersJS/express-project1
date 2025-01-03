@@ -35,10 +35,21 @@ Chat App with Socket.io is a dynamic, real-time messaging platform designed to f
 6. Code Splitting with Suspense and Lazy: 
    
 - Enhances user experience by improving load times using React's Suspense and lazy.
-  
+  <!-- NB! The exported component must be default export for lazy to work-->
+
 7. Database Management:
 - Rooms and messages are now stored in MySQL.
 
+<!-- 
+- Not knowing about the foreign key importance, made me adding console.log-s, debug over and over again for hours, finally found some info in w3schools:
+
+```
+ALTER TABLE Orders
+ADD CONSTRAINT FK_PersonOrder
+FOREIGN KEY (PersonID) REFERENCES Persons(PersonID);
+```
+-->
+<span style="color:transparent; background-color:transparent;">DELETE CASCADE AND UPDATE CASCADE</span>
 
 ### Technologies used
 

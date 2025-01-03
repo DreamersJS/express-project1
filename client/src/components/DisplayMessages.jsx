@@ -1,11 +1,38 @@
 import React, { useEffect, useState } from 'react';
+import { translateMessage } from '../../service/translationService';
 
 const DisplayMessages = ({ user, messages, messagesListRef, messagesEndRef, handleScroll, handleDeleteMessage, loadNextPage, handleEditMessage, isLoading }) => {
   const [visibleMsgDropdown, setVisibleMsgDropdown] = useState(null);
   const [isEditing, setIsEditing] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [newMessage, setNewMessage] = useState('');
+  const [translatedMessages, setTranslatedMessages] = useState({});
 
+  useEffect(() => {
+    console.log('Updated translatedMessages:', translatedMessages);
+  }, [translatedMessages]);
+  
+  const handleTranslate = async (e, msg, targetLang = 'en') => {
+    e.stopPropagation();
+
+    try {
+      // Check if the message is already translated
+      if (translatedMessages[msg.id]) {
+        return;
+      }
+
+      const translatedText = await translateMessage(msg.message, targetLang);
+
+      // Update the state with the new translated message
+      setTranslatedMessages((prev) => ({
+        ...prev,
+        [msg.id]: translatedText, 
+      }));
+    } catch (error) {
+      console.error('Error translating message:', error);
+    }
+  };
+  
   const toggleModal = () => {
     setIsModalVisible(prev => !prev);
   };
@@ -72,10 +99,16 @@ const DisplayMessages = ({ user, messages, messagesListRef, messagesEndRef, hand
               <span className="username">
                 {msg.username || 'Unknown'}:
               </span>
-              <span className="message">
+              
+              {translatedMessages && translatedMessages[msg.id] ? (
+                <span className="message translated-message">
+                  {translatedMessages[msg.id]}
+                </span>
+              ) : (
+                <span className="message">
                {msg.message || 'Invalid message'}
               </span>
-              {/* {`${msg.username || 'Unknown'}: ${msg.message || 'Invalid message'}`} */}
+              )}
               {
 
                 msg.username === user?.username && msg.id
@@ -87,7 +120,7 @@ const DisplayMessages = ({ user, messages, messagesListRef, messagesEndRef, hand
                   <div>
                     <button onClick={(event) => { handleEditMsg(event, msg.id, msg.message) }}>Edit</button>
                     <button onClick={(event) => { handleDeleteMsg(event, msg.id) }}>Delete</button>
-                    <button>Translate</button>
+                    <button onClick={(event) => { handleTranslate(event, msg, 'en') }}>Translate</button>
                   </div>
                 )
               }

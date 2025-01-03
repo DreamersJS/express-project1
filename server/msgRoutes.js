@@ -1,6 +1,8 @@
 import express from 'express';
 import db from './db.js';
 import dotenv from 'dotenv';
+import fetch from 'node-fetch';
+import * as deepl from 'deepl-node';
 
 dotenv.config();
 
@@ -78,6 +80,27 @@ router.delete('/messages/:id', async (req, res) => {
     console.error('Error deleting message:', error);
     res.status(500).json({ error: 'Failed to delete message' });
   }
+});
+
+// Use DeepL API 
+const authKey = process.env.DEEPL_API_KEY; 
+const translator = new deepl.Translator(authKey);
+
+router.post('/translate', async (req, res) => {
+  const { q, target } = req.body;
+
+  if (!q || !target) {
+    return res.status(400).json({ error: 'Missing required fields: q (text) or target (language)' });
+  }
+
+  try {
+    // null auto detects the source language
+    const result = await translator.translateText(q, null, target);
+    return res.json({ translation: result.text, service: 'DeepL' });
+  } catch (deeplError) {
+    console.error('DeepL API error:', deeplError);
+  }
+
 });
 
 
