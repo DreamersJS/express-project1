@@ -1,6 +1,8 @@
 import express from 'express';
 import db from './db.js';
 import dotenv from 'dotenv';
+import fetch from 'node-fetch';
+import * as deepl from 'deepl-node';
 
 dotenv.config();
 
@@ -77,6 +79,49 @@ router.delete('/messages/:id', async (req, res) => {
   } catch (error) {
     console.error('Error deleting message:', error);
     res.status(500).json({ error: 'Failed to delete message' });
+  }
+});
+
+
+const authKey = process.env.DEEPL_API_KEY; 
+const translator = new deepl.Translator(authKey);
+
+router.post('/translate', async (req, res) => {
+  const { q, target } = req.body;
+
+  if (!q || !target) {
+    return res.status(400).json({ error: 'Missing required fields: q (text) or target (language)' });
+  }
+
+  try {
+    // Use DeepL API first
+    // const targetLang = target === 'en' ? 'en-GB' : target;
+    const result = await translator.translateText(q, null, 'en-US');
+    console.log('DeepL translation:', result.text);
+    return res.json({ translation: result.text, service: 'DeepL' });// return res.json(result.text)
+  } catch (deeplError) {
+    console.error('DeepL API error:', deeplError);
+  }
+
+  try {
+    // Fallback to LibreTranslate API
+    const LibreTranslateAPI = 'https://libretranslate.de/translate';
+    const response = await fetch(LibreTranslateAPI, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ q, source: 'auto', target }), // Auto-detect source language in LibreTranslate
+    });
+
+    if (!response.ok) {
+      console.error('LibreTranslate API error:', response.statusText);
+      return res.status(response.status).json({ error: 'Error from translation service' });
+    }
+
+    const data = await response.json();
+    return res.json({ translation: data.translatedText, service: 'LibreTranslate' });
+  } catch (libreError) {
+    console.error('Error with LibreTranslate:', libreError);
+    return res.status(500).json({ error: 'Failed to translate using both services' });
   }
 });
 

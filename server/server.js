@@ -30,7 +30,7 @@ const app = express();
 
 // Middleware to parse JSON requests
 app.use(express.json());
-// app.use(cors(CORS_ORIGIN));
+app.use(cors(CORS_ORIGIN));
 
 // API Routes
 app.use('/api/users', userRoutes);

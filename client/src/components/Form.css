@@ -182,3 +182,7 @@ ul {
   padding-left: 4px;
   padding-right: 4px;
 }
+
+.translated-message {
+  font-style: italic;
+}
