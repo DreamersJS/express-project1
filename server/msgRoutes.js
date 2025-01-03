@@ -82,7 +82,7 @@ router.delete('/messages/:id', async (req, res) => {
   }
 });
 
-
+// Use DeepL API 
 const authKey = process.env.DEEPL_API_KEY; 
 const translator = new deepl.Translator(authKey);
 
@@ -94,35 +94,13 @@ router.post('/translate', async (req, res) => {
   }
 
   try {
-    // Use DeepL API first
-    // const targetLang = target === 'en' ? 'en-GB' : target;
-    const result = await translator.translateText(q, null, 'en-US');
-    console.log('DeepL translation:', result.text);
-    return res.json({ translation: result.text, service: 'DeepL' });// return res.json(result.text)
+    // null auto detects the source language
+    const result = await translator.translateText(q, null, target);
+    return res.json({ translation: result.text, service: 'DeepL' });
   } catch (deeplError) {
     console.error('DeepL API error:', deeplError);
   }
 
-  try {
-    // Fallback to LibreTranslate API
-    const LibreTranslateAPI = 'https://libretranslate.de/translate';
-    const response = await fetch(LibreTranslateAPI, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ q, source: 'auto', target }), // Auto-detect source language in LibreTranslate
-    });
-
-    if (!response.ok) {
-      console.error('LibreTranslate API error:', response.statusText);
-      return res.status(response.status).json({ error: 'Error from translation service' });
-    }
-
-    const data = await response.json();
-    return res.json({ translation: data.translatedText, service: 'LibreTranslate' });
-  } catch (libreError) {
-    console.error('Error with LibreTranslate:', libreError);
-    return res.status(500).json({ error: 'Failed to translate using both services' });
-  }
 });
 
 

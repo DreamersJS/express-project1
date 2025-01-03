@@ -14,23 +14,19 @@ const DisplayMessages = ({ user, messages, messagesListRef, messagesEndRef, hand
   
   const handleTranslate = async (e, msg, targetLang = 'en') => {
     e.stopPropagation();
-    console.log('Translating message:', msg);
+
     try {
       // Check if the message is already translated
       if (translatedMessages[msg.id]) {
-        return; // If already translated, do nothing
+        return;
       }
-      console.log('Current translatedMessages:', translatedMessages);
-      console.log('Translated message for this ID:', translatedMessages[msg.id]);
-      
-      // Call the translateMessage function to get the translated text
+
       const translatedText = await translateMessage(msg.message, targetLang);
-  console.log('Translated text:', translatedText);
-  // console.log('Translated text .translation:', translatedText.translation);
+
       // Update the state with the new translated message
       setTranslatedMessages((prev) => ({
         ...prev,
-        [msg.id]: translatedText, // Use the message ID as the key
+        [msg.id]: translatedText, 
       }));
     } catch (error) {
       console.error('Error translating message:', error);
@@ -113,7 +109,6 @@ const DisplayMessages = ({ user, messages, messagesListRef, messagesEndRef, hand
                {msg.message || 'Invalid message'}
               </span>
               )}
-              {/* {`${msg.username || 'Unknown'}: ${msg.message || 'Invalid message'}`} */}
               {
 
                 msg.username === user?.username && msg.id
