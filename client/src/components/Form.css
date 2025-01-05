@@ -186,3 +186,17 @@ ul {
 .translated-message {
   font-style: italic;
 }
+
+.flex-col {
+  display: flex;
+  flex-direction: column;  /* Stack the buttons vertically */
+  gap: 5px; /* Add space between buttons */
+  padding: 10px;
+  background-color: white;  /* Background color of the dropdown */
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);  /* Optional shadow for better visibility */
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 10;  /* Ensure it appears above other content */
+}

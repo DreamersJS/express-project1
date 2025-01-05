@@ -10,9 +10,10 @@ const DisplayMessages = ({ user, messages, messagesListRef, messagesEndRef, hand
 
   useEffect(() => {
     console.log('Updated translatedMessages:', translatedMessages);
+    console.log('JSON.stringify translatedMessages:', JSON.stringify(translatedMessages));
   }, [translatedMessages]);
   
-  const handleTranslate = async (e, msg, targetLang = 'en') => {
+  const handleTranslate = async (e, msg, targetLang = 'en-US') => {
     e.stopPropagation();
 
     try {
@@ -111,15 +112,25 @@ const DisplayMessages = ({ user, messages, messagesListRef, messagesEndRef, hand
               )}
               {
 
-                msg.username === user?.username && msg.id
+                  msg.id
                   ? <button onClick={() => handleOpenCloseDropdown(msg.id)}>dropdown</button>
                   : null
               }
               {
                 visibleMsgDropdown === msg.id && (
-                  <div>
-                    <button onClick={(event) => { handleEditMsg(event, msg.id, msg.message) }}>Edit</button>
-                    <button onClick={(event) => { handleDeleteMsg(event, msg.id) }}>Delete</button>
+                  <div className='flex-col'>
+                    {
+                      msg.username === user?.username && (
+                        <button onClick={(event) => { handleEditMsg(event, msg.id, msg.message) }}>Edit</button>
+                      )
+                    }
+                    {
+                      msg.username === user?.username && (
+                        <button onClick={(event) => { handleDeleteMsg(event, msg.id) }}>Delete</button>
+                      )
+                    }
+                    {/* <button onClick={(event) => { handleEditMsg(event, msg.id, msg.message) }}>Edit</button> */}
+                    {/* <button onClick={(event) => { handleDeleteMsg(event, msg.id) }}>Delete</button> */}
                     <button onClick={(event) => { handleTranslate(event, msg, 'en') }}>Translate</button>
                   </div>
                 )

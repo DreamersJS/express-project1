@@ -95,8 +95,8 @@ router.post('/translate', async (req, res) => {
 
   try {
     // null auto detects the source language
-    const result = await translator.translateText(q, null, target);
-    return res.json({ translation: result.text, service: 'DeepL' });
+    const result = await translator.translateText(q, null, 'en-US');
+    return res.json(result.text);
   } catch (deeplError) {
     console.error('DeepL API error:', deeplError);
   }
