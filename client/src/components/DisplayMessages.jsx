@@ -121,10 +121,12 @@ const DisplayMessages = ({ user, messages, messagesListRef, messagesEndRef, hand
                   <div className='flex-col'>
                     {
                       msg.username === user?.username && (
-                        <div>
                         <button onClick={(event) => { handleEditMsg(event, msg.id, msg.message) }}>Edit</button>
+                      )
+                    }
+                    {
+                      msg.username === user?.username && (
                         <button onClick={(event) => { handleDeleteMsg(event, msg.id) }}>Delete</button>
-                        </div>
                       )
                     }
                     {/* <button onClick={(event) => { handleEditMsg(event, msg.id, msg.message) }}>Edit</button> */}
