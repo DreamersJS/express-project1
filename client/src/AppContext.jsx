@@ -44,7 +44,6 @@ export const AppContextProvider = ({ children }) => {
         setUser(userData);
         setToken(token);
         localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(userData));
     };
 
     // Function to logout
@@ -52,7 +51,6 @@ export const AppContextProvider = ({ children }) => {
         setUser(null);
         setToken(null);
         localStorage.removeItem('token');
-        localStorage.removeItem('user');
     };
 
     return (
