@@ -16,6 +16,58 @@ const __dirname = path.dirname(__filename);
 
 const PORT = process.env.PORT || 3500;
 const NODE_ENV = process.env.NODE_ENV || 'development';
+// The cors middleware expects an options object, not just a string or false.
+/** 
+Express HTTP server CORS Middleware Setup
+const isCORSDisabled = process.env.CORS_ORIGIN_PROD === 'false';
+
+let corsOptions = {};
+
+if (NODE_ENV === 'production') {
+  if (isCORSDisabled) {
+    corsOptions.origin = false; // block CORS requests
+  } else {
+    corsOptions.origin = process.env.CORS_ORIGIN_PROD.split(',').map(o => o.trim());
+    corsOptions.credentials = true;
+  }
+} else {
+  corsOptions.origin = process.env.CORS_ORIGIN_DEV.split(',').map(o => o.trim());
+  corsOptions.credentials = true;
+}
+
+if (corsOptions.origin !== false) {
+  app.use(cors(corsOptions));
+} else {
+  console.log('CORS is disabled in production');
+}
+
+Socket.IO CORS Setup
+import http from 'http';
+
+// Assuming you have your Express app already:
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: corsOptions.origin,
+    methods: ["GET", "POST"],
+    credentials: corsOptions.credentials || false,
+  }
+});
+
+
+When to prefer http.createServer(app)? 
+
+    If you need to add additional HTTP-level features (e.g., server.on('upgrade', ...)).
+
+    If you use WebSocket fallbacks or integrate with other protocols.
+
+    If you want more explicit control over the HTTP server life cycle.
+import http from 'http';
+const server = http.createServer(app); // More explicit
+
+const io = new Server(server,
+*/
 const parseOrigins = (origins) => origins.split(',').map((origin) => origin.trim());
 const isCORSDisabled = process.env.CORS_ORIGIN_PROD === 'false';
 const CORS_ORIGIN =

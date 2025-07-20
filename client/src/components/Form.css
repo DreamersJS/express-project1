@@ -84,7 +84,7 @@ ul {
 
 .msg-display li.other {
   padding: 5px;
-  background-color: #4bfd45ea;
+  background-color: #28da22ea;
   color: #fff;
   align-self: flex-start;
 }
@@ -199,4 +199,19 @@ ul {
   right: 0;
   top: 100%;
   z-index: 10;  /* Ensure it appears above other content */
+}
+
+.dropdown-icon {
+  font-size: 1.5rem;
+  cursor: pointer;
+  font-weight: bold;
+  align-items: end;
+}
+
+.edit-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
 }
