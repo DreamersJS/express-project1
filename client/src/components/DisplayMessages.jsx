@@ -12,7 +12,7 @@ const DisplayMessages = ({ user, messages, messagesListRef, messagesEndRef, hand
     console.log('Updated translatedMessages:', translatedMessages);
     console.log('JSON.stringify translatedMessages:', JSON.stringify(translatedMessages));
   }, [translatedMessages]);
-  
+
   const handleTranslate = async (e, msg, targetLang = 'en-US') => {
     e.stopPropagation();
 
@@ -27,13 +27,13 @@ const DisplayMessages = ({ user, messages, messagesListRef, messagesEndRef, hand
       // Update the state with the new translated message
       setTranslatedMessages((prev) => ({
         ...prev,
-        [msg.id]: translatedText, 
+        [msg.id]: translatedText,
       }));
     } catch (error) {
       console.error('Error translating message:', error);
     }
   };
-  
+
   const toggleModal = () => {
     setIsModalVisible(prev => !prev);
   };
@@ -56,9 +56,9 @@ const DisplayMessages = ({ user, messages, messagesListRef, messagesEndRef, hand
 
   const handleSaveEdit = async (msgId, editedMessage) => {
     try {
-      await handleEditMessage(msgId, editedMessage); 
-      setIsEditing(null); 
-      toggleModal(); 
+      await handleEditMessage(msgId, editedMessage);
+      setIsEditing(null);
+      toggleModal();
     } catch (error) {
       console.error('Error saving the edited message:', error);
     }
@@ -100,22 +100,23 @@ const DisplayMessages = ({ user, messages, messagesListRef, messagesEndRef, hand
               <span className="username">
                 {msg.username || 'Unknown'}:
               </span>
-              
+
               {translatedMessages && translatedMessages[msg.id] ? (
                 <span className="message translated-message">
                   {translatedMessages[msg.id]}
                 </span>
               ) : (
                 <span className="message">
-               {msg.message || 'Invalid message'}
-              </span>
+                  {msg.message || 'Invalid message'}
+                </span>
               )}
               {
 
-                  msg.id
-                  ? <button onClick={() => handleOpenCloseDropdown(msg.id)}>dropdown</button>
+                msg.id
+                  ? <span className="dropdown-icon" onClick={() => handleOpenCloseDropdown(msg.id)}>⋮</span>
                   : null
               }
+              {/* dropdown modal */}
               {
                 visibleMsgDropdown === msg.id && (
                   <div className='flex-col'>
@@ -140,6 +141,7 @@ const DisplayMessages = ({ user, messages, messagesListRef, messagesEndRef, hand
                 isModalVisible && isEditing === msg.id && (
                   <div>
                     <input
+                    className='edit-input'
                       type='text'
                       value={newMessage}
                       onChange={(event) => setNewMessage(event.target.value)}
